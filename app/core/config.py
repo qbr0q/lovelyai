@@ -1,7 +1,7 @@
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
-class Settings(BaseSettings):
+class Config(BaseSettings):
     bot_token: str
     openrouter_api_key: str
 
@@ -11,4 +11,4 @@ class Settings(BaseSettings):
     )
 
 
-config = Settings()
+config = Config()
