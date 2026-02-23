@@ -9,10 +9,15 @@ LEXICON = sn(
     ),
     button=sn(
         create_profile="Создать анкету",
-        import_profile="Импортировать из других ботов"
+        import_profile="Импортировать из других ботов",
+        save_profile="Сохранить анкету",
+        edit_profile="Редактировать"
     ),
     error=sn(
         message_not_forwared="Похоже это не пересланное сообщение. Попробуй еще раз или заполни вручную.",
         message_forwared_not_from_bot="Анкета должна быть переслана от телеграм-бота"
+    ),
+    process=sn(
+        import_profile="Переношу анкету, происходит магия..."
     )
 )

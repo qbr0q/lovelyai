@@ -1,9 +1,10 @@
 from aiogram import Bot, Dispatcher
-from app.services.ai_service import AIService
 from aiogram.fsm.storage.memory import MemoryStorage
+from types import SimpleNamespace as sn
+
 from app.core import config
 from app.bot.handlers import routers
-from types import SimpleNamespace as sn
+from app.services.ai_service import AIService
 
 
 def include_routers(dp):

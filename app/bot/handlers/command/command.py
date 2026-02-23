@@ -3,7 +3,7 @@ from aiogram.filters import Command, CommandStart
 from aiogram.types import Message, WebAppInfo
 from aiogram.utils.keyboard import InlineKeyboardBuilder
 
-from app.bot.handlers.command.utils import get_reply_keyboard
+from app.bot.handlers.utils import get_reply_keyboard
 from app.core.lexicon import LEXICON
 
 

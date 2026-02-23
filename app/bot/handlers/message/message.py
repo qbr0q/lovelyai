@@ -2,7 +2,7 @@ from aiogram import Router, F
 from aiogram.types import Message
 from aiogram.fsm.context import FSMContext
 
-from app.bot.handlers.registration import Registration
+from app.bot.handlers.registration.registration import Registration
 from app.core.lexicon import LEXICON
 
 
