@@ -1,11 +1,13 @@
 from aiogram import Router
+from aiogram.filters import StateFilter
 from aiogram.types import Message, ReplyKeyboardRemove
 from aiogram.fsm.context import FSMContext
 
 from app.bot.states import Registration
 from app.bot.handlers.utils import show_profile_preview, update_profile_field
 from app.bot.handlers.registration.utils import extract_profile_data, refresh_edit_menu
-from app.bot.handlers.constants import GENDER_BUTTONS, GENDER_BUTTON_MAP
+from app.bot.handlers.constants import GENDER_BUTTONS, INPUT_GENDER_MAP, \
+    STATE_TO_FIELD, FIELDS_CONFIG
 from app.core.lexicon import LEXICON
 from app.services.ai_service import AIService
 
@@ -34,16 +36,25 @@ async def process_import(message: Message, state: FSMContext, ai_service: AIServ
     await state.set_state(Registration.confirm_profile)
 
 
-@router.message(Registration.edit_gender)
-async def edit_gender(message: Message, state: FSMContext):
-    gender_input = message.text
+@router.message(StateFilter(Registration.edit_gender, Registration.edit_name,
+                            Registration.edit_age, Registration.edit_city, Registration.edit_bio))
+async def edit_profile_field(message: Message, state: FSMContext):
+    current_state = await state.get_state()
+    field_key = STATE_TO_FIELD.get(current_state)
+    data_input = message.text
 
-    if gender_input not in GENDER_BUTTONS:
-        await message.answer("Пожалуйста, выбери вариант на кнопках ниже")
-        return
+    config = FIELDS_CONFIG.get(field_key)
+    validate = config.get("validate")
+    if validate:
+        error_message = validate(data_input)
+        if error_message:
+            await message.answer(error_message)
+            return
 
-    await update_profile_field(state, "gender",
-                               GENDER_BUTTON_MAP.get(gender_input))
+    if not (current_state == "Registration:edit_bio" and data_input == "Оставить текущее"):
+        data_output = data_input if current_state != "Registration:edit_gender" \
+            else INPUT_GENDER_MAP.get(data_input)
+        await update_profile_field(state, field_key, data_output)
 
     await message.answer(
         "Данные обновлены!",

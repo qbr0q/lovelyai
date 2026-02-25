@@ -1,10 +1,15 @@
-from types import SimpleNamespace as sn
+from types import SimpleNamespace
 from aiogram.types import Message, InlineKeyboardButton, KeyboardButton
 from aiogram.utils.keyboard import ReplyKeyboardBuilder, InlineKeyboardBuilder
 from aiogram.fsm.context import FSMContext
 
 from app.bot.handlers.constants import GENDER_ICON_MAP, GENDER_MAP
 from app.core.lexicon import LEXICON
+
+
+class SimpleObject(SimpleNamespace):
+    def __getattr__(self, item):
+        return self.__dict__.get(item)
 
 
 def get_reply_keyboard(buttons_data, row_width=2):
@@ -18,9 +23,11 @@ def get_reply_keyboard(buttons_data, row_width=2):
 
 def get_inline_keyboard(raw_buttons_data, row_width=2):
     builder = InlineKeyboardBuilder()
-    buttons_data = [InlineKeyboardButton(text=button_data[0], callback_data=button_data[1])
-                    for button_data in raw_buttons_data]
 
+    buttons_data = [InlineKeyboardButton(text=button_data.title,
+                                         callback_data=button_data.callback,
+                                         style=button_data.style)
+                    for button_data in raw_buttons_data]
     builder.add(*buttons_data)
     builder.adjust(row_width)
 
@@ -31,8 +38,9 @@ async def show_profile_preview(state: FSMContext, edit_msg: Message):
     profile_data = await state.get_value("profile_data")
 
     buttons_data = [
-        (LEXICON.button.save_profile, "save_profile"),
-        (LEXICON.button.edit_profile, "edit_profile")
+        SimpleObject(title=LEXICON.button.save_profile, callback="save_profile",
+                     style="success"),
+        SimpleObject(title=LEXICON.button.edit_profile, callback="edit_profile")
     ]
     kb = get_inline_keyboard(buttons_data)
 
@@ -50,19 +58,21 @@ def show_editable_profile(profile_data):
     )
     msg = f"Пол - {gender or 'Не указан'}\n" \
           f"Имя - {profile_data.get('name', 'Не указано')}\n" \
+          f"Возраст - {profile_data.get('age', 'Не указан')}\n" \
           f"Город - {profile_data.get('city', 'Не указан')}\n" \
           f"Описание - {profile_data.get('bio', 'Не указано')}\n"
 
     buttons_data = [
-        ("Редактировать пол", "edit_gender"),
-        ("Редактировать имя", "edit_name"),
-        ("Редактировать город", "edit_city"),
-        ("Редактировать описание", "edit_bio"),
-        ("Назад", "back_to_profile")
+        SimpleObject(title="Редактировать пол", callback="edit_gender"),
+        SimpleObject(title="Редактировать имя", callback="edit_name"),
+        SimpleObject(title="Редактировать возраст", callback="edit_age"),
+        SimpleObject(title="Редактировать город", callback="edit_city"),
+        SimpleObject(title="Редактировать описание", callback="edit_bio"),
+        SimpleObject(title="Назад", callback="back_to_profile", style="danger")
     ]
-    kb = get_inline_keyboard(buttons_data, row_width=1)
+    kb = get_inline_keyboard(buttons_data)
 
-    return sn(text=msg, kb=kb)
+    return SimpleObject(text=msg, kb=kb)
 
 
 async def update_profile_field(state: FSMContext, field: str, value: any):

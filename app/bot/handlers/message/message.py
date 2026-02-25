@@ -9,6 +9,12 @@ from app.core.lexicon import LEXICON
 router = Router()
 
 
+# @router.message(F.text == "Создать анкету")
+# async def start_import(message: Message, state: FSMContext):
+#     await state.set_state(Registration.create_profile)
+#     await message.answer(LEXICON.state.waiting_import)
+
+
 @router.message(F.text == LEXICON.button.import_profile)
 async def start_import(message: Message, state: FSMContext):
     await state.set_state(Registration.waiting_for_import)
