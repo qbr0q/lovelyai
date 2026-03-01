@@ -2,11 +2,9 @@ from aiogram import Router, F
 from aiogram.types import CallbackQuery
 from aiogram.fsm.context import FSMContext
 
-from app.bot.states import Registration
 from app.bot.handlers.utils import show_profile_preview, show_editable_profile, \
-    get_reply_keyboard
+    prepare_field_edit
 
-from app.bot.handlers.constants import GENDER_BUTTONS, FIELDS_CONFIG
 
 router = Router()
 
@@ -24,7 +22,7 @@ async def edit_profile(callback: CallbackQuery, state: FSMContext):
 @router.callback_query(F.data == "back_to_profile")
 async def back_to_profile(callback: CallbackQuery, state: FSMContext):
     await callback.answer()
-    await show_profile_preview(state, callback.message)
+    await show_profile_preview(state, edit_msg=callback.message)
 
 
 @router.callback_query(F.data.in_({"edit_name", "edit_age", "edit_city",
@@ -32,17 +30,9 @@ async def back_to_profile(callback: CallbackQuery, state: FSMContext):
 async def edit_profile_field(callback: CallbackQuery, state: FSMContext):
     await callback.answer()
     callback_data = callback.data
-    field = callback.data.replace("edit_", "")
-    config = FIELDS_CONFIG[field]
+    field = callback_data.replace("edit_", "")
 
-    profile_data = await state.get_value("profile_data")
-    current_val = profile_data.get(field)
+    field_data = await prepare_field_edit(field, state)
 
-    if callback_data == "edit_gender":
-        rm = get_reply_keyboard(GENDER_BUTTONS)
-    else:
-        reply_button = ["Оставить текущее" if callback_data == "edit_bio" else current_val]
-        rm = get_reply_keyboard(reply_button) if current_val else None
-
-    await state.set_state(config["state"])
-    await callback.message.answer(config["text"], reply_markup=rm)
+    await state.set_state(field_data.state.edit_state)
+    await callback.message.answer(field_data.text, reply_markup=field_data.rm)
