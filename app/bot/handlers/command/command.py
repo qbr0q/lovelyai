@@ -3,7 +3,7 @@ from aiogram.filters import Command, CommandStart
 from aiogram.types import Message, WebAppInfo
 from aiogram.utils.keyboard import InlineKeyboardBuilder
 
-from app.bot.handlers.utils import get_reply_keyboard
+from app.bot.handlers.utils import get_start_rm
 from app.core.lexicon import LEXICON
 
 
@@ -11,11 +11,10 @@ router = Router()
 
 
 @router.message(CommandStart())
-async def cmd_start(message: Message):
-    buttons = [LEXICON.button.create_profile, LEXICON.button.import_profile]
-    reply_markup = get_reply_keyboard(buttons)
+async def start(message: Message):
+    rm = get_start_rm()
 
-    await message.answer(LEXICON.start, reply_markup=reply_markup)
+    await message.answer(LEXICON.start, reply_markup=rm)
 
 
 @router.message(Command("app"))

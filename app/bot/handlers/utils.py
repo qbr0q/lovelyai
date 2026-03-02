@@ -30,7 +30,14 @@ def get_inline_keyboard(raw_buttons_data, row_width=2):
     return builder.as_markup()
 
 
-async def show_profile_preview(state: FSMContext, message: Message = None, edit_msg: Message = None):
+def get_start_rm():
+    buttons = [LEXICON.button.create_profile, LEXICON.button.import_profile]
+    reply_markup = get_reply_keyboard(buttons)
+
+    return reply_markup
+
+
+async def show_profile_preview(state: FSMContext, message: Message, edit_msg: Message = None):
     profile_data = await state.get_value("profile_data")
 
     buttons_data = [
@@ -39,6 +46,7 @@ async def show_profile_preview(state: FSMContext, message: Message = None, edit_
         SimpleObject(title=LEXICON.button.edit_profile, callback="edit_profile")
     ]
     kb = get_inline_keyboard(buttons_data)
+    rm = get_start_rm()
 
     gender_icon = GENDER_ICON_MAP.get(profile_data.get('gender'), "🤍")
     profile_text = f"{gender_icon} {profile_data.get('name')}, " \
@@ -47,6 +55,7 @@ async def show_profile_preview(state: FSMContext, message: Message = None, edit_
     if edit_msg:
         menu_mes = await edit_msg.edit_text(profile_text, reply_markup=kb)
     else:
+        await message.answer("Готово! Анктета сформирована", reply_markup=rm)
         menu_mes = await message.answer(profile_text, reply_markup=kb)
     await state.update_data(menu_id=menu_mes.message_id)
 

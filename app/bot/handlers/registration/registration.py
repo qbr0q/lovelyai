@@ -1,10 +1,10 @@
 from aiogram import Router
 from aiogram.filters import StateFilter
-from aiogram.types import Message, ReplyKeyboardRemove
+from aiogram.types import Message
 from aiogram.fsm.context import FSMContext
 
 from app.bot.states import Registration
-from app.bot.handlers.utils import show_profile_preview, update_profile_field
+from app.bot.handlers.utils import show_profile_preview, update_profile_field, get_start_rm
 from app.bot.handlers.registration.utils import extract_profile_data, refresh_edit_menu
 from app.bot.handlers.message.utils import fill_profile
 from app.bot.handlers.constants import CREATION_STATE
@@ -32,7 +32,7 @@ async def process_import(message: Message, state: FSMContext, ai_service: AIServ
     profile_data = await extract_profile_data(ai_service, raw_text)
 
     await state.update_data(profile_data=profile_data)
-    await show_profile_preview(state, edit_msg=msg)
+    await show_profile_preview(state, message, edit_msg=msg)
     await state.set_state(Registration.confirm_profile)
 
 
@@ -44,7 +44,7 @@ async def edit_profile_field(message: Message, state: FSMContext):
 
     await message.answer(
         "Данные обновлены!",
-        reply_markup=ReplyKeyboardRemove()
+        reply_markup=get_start_rm()
     )
 
     await refresh_edit_menu(message, state)
@@ -62,4 +62,4 @@ async def create_profile_field(message: Message, state: FSMContext):
         await fill_profile(message, state, step + 1)
     except:
         await show_profile_preview(state, message=message)
-
+        await state.set_state(Registration.confirm_profile)

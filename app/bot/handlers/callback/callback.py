@@ -22,7 +22,7 @@ async def edit_profile(callback: CallbackQuery, state: FSMContext):
 @router.callback_query(F.data == "back_to_profile")
 async def back_to_profile(callback: CallbackQuery, state: FSMContext):
     await callback.answer()
-    await show_profile_preview(state, edit_msg=callback.message)
+    await show_profile_preview(state, callback.message, edit_msg=callback.message)
 
 
 @router.callback_query(F.data.in_({"edit_name", "edit_age", "edit_city",
