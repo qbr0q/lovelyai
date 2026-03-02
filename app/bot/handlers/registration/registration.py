@@ -1,13 +1,13 @@
 from aiogram import Router
 from aiogram.filters import StateFilter
-from aiogram.types import Message, ReplyKeyboardRemove
+from aiogram.types import Message
 from aiogram.fsm.context import FSMContext
 
 from app.bot.states import Registration
-from app.bot.handlers.utils import show_profile_preview, update_profile_field
+from app.bot.handlers.utils import show_profile_preview, update_profile_field, get_start_rm
 from app.bot.handlers.registration.utils import extract_profile_data, refresh_edit_menu
-from app.bot.handlers.constants import GENDER_BUTTONS, INPUT_GENDER_MAP, \
-    STATE_TO_FIELD, FIELDS_CONFIG
+from app.bot.handlers.message.utils import fill_profile
+from app.bot.handlers.constants import CREATION_STATE
 from app.core.lexicon import LEXICON
 from app.services.ai_service import AIService
 
@@ -32,34 +32,34 @@ async def process_import(message: Message, state: FSMContext, ai_service: AIServ
     profile_data = await extract_profile_data(ai_service, raw_text)
 
     await state.update_data(profile_data=profile_data)
-    await show_profile_preview(state, msg)
+    await show_profile_preview(state, message, edit_msg=msg)
     await state.set_state(Registration.confirm_profile)
 
 
 @router.message(StateFilter(Registration.edit_gender, Registration.edit_name,
                             Registration.edit_age, Registration.edit_city, Registration.edit_bio))
 async def edit_profile_field(message: Message, state: FSMContext):
-    current_state = await state.get_state()
-    field_key = STATE_TO_FIELD.get(current_state)
-    data_input = message.text
 
-    config = FIELDS_CONFIG.get(field_key)
-    validate = config.get("validate")
-    if validate:
-        error_message = validate(data_input)
-        if error_message:
-            await message.answer(error_message)
-            return
-
-    if not (current_state == "Registration:edit_bio" and data_input == "Оставить текущее"):
-        data_output = data_input if current_state != "Registration:edit_gender" \
-            else INPUT_GENDER_MAP.get(data_input)
-        await update_profile_field(state, field_key, data_output)
+    await update_profile_field(state, message)
 
     await message.answer(
         "Данные обновлены!",
-        reply_markup=ReplyKeyboardRemove()
+        reply_markup=get_start_rm()
     )
 
     await refresh_edit_menu(message, state)
     await state.set_state(Registration.confirm_profile)
+
+
+@router.message(StateFilter(Registration.create_gender, Registration.create_name,
+                            Registration.create_age, Registration.create_city, Registration.create_bio))
+async def create_profile_field(message: Message, state: FSMContext):
+    await update_profile_field(state, message)
+    current_state = await state.get_state()
+
+    try:
+        step = CREATION_STATE.index(current_state)
+        await fill_profile(message, state, step + 1)
+    except:
+        await show_profile_preview(state, message=message)
+        await state.set_state(Registration.confirm_profile)
