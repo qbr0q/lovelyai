@@ -3,7 +3,7 @@ from aiogram.fsm.storage.memory import MemoryStorage
 from types import SimpleNamespace as sn
 
 from app.core import config
-from app.core.middlewares import DbSessionMiddleware
+from app.core.middlewares import DbSessionMiddleware, UserRegistrationMiddleware
 from app.database import async_session_factory, init_db
 from app.bot.handlers import routers
 from app.services.ai_service import AIService
@@ -16,6 +16,7 @@ def include_routers(dp):
 
 def include_middleware(dp):
     dp.update.middleware(DbSessionMiddleware(session_pool=async_session_factory))
+    dp.update.middleware(UserRegistrationMiddleware())
 
 
 async def setup_app():

@@ -5,14 +5,18 @@ from aiogram.utils.keyboard import InlineKeyboardBuilder
 
 from app.bot.handlers.utils import get_start_rm
 from app.core.lexicon import LEXICON
+from app.database.models import User
 
 
 router = Router()
 
 
 @router.message(CommandStart())
-async def start(message: Message):
-    rm = get_start_rm()
+async def start(message: Message, user: User):
+    if not user:
+        rm = None
+    else:
+        rm = get_start_rm()
 
     await message.answer(LEXICON.start, reply_markup=rm)
 

@@ -4,8 +4,8 @@ from aiogram.fsm.context import FSMContext
 from sqlmodel.ext.asyncio.session import AsyncSession
 
 from app.bot.handlers.utils import show_profile_preview, show_editable_profile, \
-    prepare_field_edit
-from app.database.models import User
+    prepare_field_edit, get_reply_keyboard
+from app.database.models import User, UserFilter
 
 
 router = Router()
@@ -44,21 +44,29 @@ async def edit_profile_field(callback: CallbackQuery, state: FSMContext):
 async def save_profile(callback: CallbackQuery, state: FSMContext,
                  session: AsyncSession):
     await callback.answer()
-    try:
-        profile_data = await state.get_value("profile_data")
-        record = User(
-            telegram_id=callback.from_user.id,
-            gender=profile_data.get("gender"),
-            name=profile_data.get("name"),
-            age=int(profile_data.get("age")),
-            city=profile_data.get("city"),
-            bio=profile_data.get("bio"),
-            status="active"
-        )
-        session.add(record)
-        await callback.message.bot.delete_message(
-            callback.message.chat.id, callback.message.message_id
-        )
-        await callback.message.answer("готово")
-    except Exception as e:
-        pass
+
+    profile_data = await state.get_value("profile_data")
+    telegram_id = callback.from_user.id
+
+    user_record = User(
+        telegram_id=telegram_id,
+        gender=profile_data.get("gender"),
+        name=profile_data.get("name"),
+        age=int(profile_data.get("age")),
+        city=profile_data.get("city"),
+        bio=profile_data.get("bio"),
+        status="active"
+    )
+    session.add(user_record)
+    await session.flush()
+
+    user_filter_record = UserFilter(user_id=user_record.id)
+    session.add(user_filter_record)
+
+    await callback.message.bot.delete_message(
+        callback.message.chat.id, callback.message.message_id
+    )
+
+    buttons = ["Мой профиль", "Мои фильтры"]
+    reply_markup = get_reply_keyboard(buttons)
+    await callback.message.answer("Успешно сохранено!", reply_markup=reply_markup)

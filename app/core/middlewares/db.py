@@ -18,5 +18,9 @@ class DbSessionMiddleware(BaseMiddleware):
 
             result = await handler(event, data)
 
-            await session.commit()
+            try:
+                await session.commit()
+            except Exception as e:
+                pass
+
             return result
