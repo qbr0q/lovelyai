@@ -1,3 +1,6 @@
 ai:
   base_url: "https://openrouter.ai/api/v1"
   default_model: "nvidia/nemotron-3-nano-30b-a3b:free"
+gar:
+  base_url: "https://nominatim.openstreetmap.org/search"
+  user_agent: "LuvlyAiBot/1.0"

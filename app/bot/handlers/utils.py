@@ -37,38 +37,44 @@ def get_start_rm():
     return reply_markup
 
 
-async def show_profile_preview(state: FSMContext, message: Message, edit_msg: Message = None):
-    profile_data = await state.get_value("profile_data")
-
-    buttons_data = [
-        SimpleObject(title=LEXICON.button.save_profile, callback="save_profile",
-                     style="success"),
+async def show_profile_preview(state: FSMContext, message: Message, profile_data,
+                               edit_msg=True, has_profile=True):
+    buttons_data = []
+    if not has_profile:
+        buttons_data.append(
+            SimpleObject(title=LEXICON.button.save_profile, callback="save_profile",
+                         style="success")
+        )
+    else:
+        buttons_data.append(
+            SimpleObject(title="Назад к поиску", callback="back_to_search",
+                         style="success")
+        )
+    buttons_data.append(
         SimpleObject(title=LEXICON.button.edit_profile, callback="edit_profile")
-    ]
+    )
     kb = get_inline_keyboard(buttons_data)
-    rm = get_start_rm()
 
-    gender_icon = GENDER_ICON_MAP.get(profile_data.get('gender'), "🤍")
-    profile_text = f"{gender_icon} {profile_data.get('name')}, " \
-              f"{profile_data.get('age')}, {profile_data.get('city')}\n{profile_data.get('bio')}"
+    gender_icon = GENDER_ICON_MAP.get(profile_data.gender, "🤍")
+    profile_text = f"{gender_icon} {profile_data.name}, " \
+              f"{profile_data.age}, {profile_data.city}\n{profile_data.bio}"
 
     if edit_msg:
-        menu_mes = await edit_msg.edit_text(profile_text, reply_markup=kb)
+        menu_mes = await message.edit_text(profile_text, reply_markup=kb)
     else:
-        await message.answer("Готово! Анктета сформирована", reply_markup=rm)
         menu_mes = await message.answer(profile_text, reply_markup=kb)
     await state.update_data(menu_id=menu_mes.message_id)
 
 
 def show_editable_profile(profile_data):
     gender = GENDER_MAP.get(
-        profile_data.get("gender")
+        profile_data.gender
     )
     msg = f"Пол - {gender or 'Не указан'}\n" \
-          f"Имя - {profile_data.get('name', 'Не указано')}\n" \
-          f"Возраст - {profile_data.get('age', 'Не указан')}\n" \
-          f"Город - {profile_data.get('city', 'Не указан')}\n" \
-          f"Описание - {profile_data.get('bio', 'Не указано')}\n"
+          f"Имя - {profile_data.name or 'Не указано'}\n" \
+          f"Возраст - {profile_data.age or 'Не указан'}\n" \
+          f"Город - {profile_data.city or 'Не указан'}\n" \
+          f"Описание - {profile_data.bio or 'Не указано'}\n"
 
     buttons_data = [
         SimpleObject(title="Редактировать пол", callback="edit_gender"),
@@ -83,7 +89,7 @@ def show_editable_profile(profile_data):
     return SimpleObject(text=msg, kb=kb)
 
 
-async def update_profile_field(state, message):
+async def update_profile_field(profile_data, state, message):
     current_state = await state.get_state()
     field = current_state.split("_")[1]
     data_input = message.text
@@ -99,20 +105,18 @@ async def update_profile_field(state, message):
     if not (field == "bio" and data_input == "Оставить текущее"):
         data_output = data_input if field != "gender" \
             else INPUT_GENDER_MAP.get(data_input)
-        profile_data = await state.get_value("profile_data", {})
-        profile_data[field] = data_output
+        setattr(profile_data, field, data_output)
         await state.update_data(profile_data=profile_data)
 
 
-async def prepare_field_edit(field, state: FSMContext):
-    profile_data = await state.get_value("profile_data", {})
-    current_val = profile_data.get(field)
+async def prepare_field_edit(profile_data, field: str):
+    current_val = getattr(profile_data, field)
     config = FIELDS_CONFIG.get(field)
 
     if field == "gender":
         rm = get_reply_keyboard(GENDER_BUTTONS)
     else:
-        reply_button = ["Оставить текущее" if field == "bio" else current_val]
+        reply_button = ["Оставить текущее" if field == "bio" else str(current_val)]
         rm = get_reply_keyboard(reply_button) if current_val else None
 
     return SimpleObject(text=config.text, state=config.state, rm=rm)

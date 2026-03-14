@@ -1,12 +1,12 @@
 from aiogram import Bot, Dispatcher
 from aiogram.fsm.storage.memory import MemoryStorage
-from types import SimpleNamespace as sn
 
 from app.core import config
 from app.core.middlewares import DbSessionMiddleware, UserRegistrationMiddleware
+from app.core.utils import SimpleObject as so
 from app.database import async_session_factory, init_db
 from app.bot.handlers import routers
-from app.services.ai_service import AIService
+from app.services import AIService, GARService
 
 
 def include_routers(dp):
@@ -25,16 +25,18 @@ async def setup_app():
     dp = Dispatcher(storage=storage)
 
     ai_service = AIService()
+    gar_service = GARService()
 
     include_routers(dp)
     include_middleware(dp)
 
     await init_db()
 
-    return sn(
+    return so(
         bot=bot,
         dp=dp,
-        ai_service=ai_service
+        ai_service=ai_service,
+        gar_service=gar_service
     )
 
 
@@ -46,5 +48,6 @@ async def start_app():
 
     await dp.start_polling(
         bot,
-        ai_service=app_components.ai_service
+        ai_service=app_components.ai_service,
+        gar_service=app_components.gar_service
     )
