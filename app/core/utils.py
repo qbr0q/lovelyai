@@ -1,4 +1,4 @@
-from dataclasses import dataclass, asdict
+from dataclasses import dataclass, field
 
 
 class SimpleObject:
@@ -17,3 +17,4 @@ class Profile:
     gender: str = ""
     city: str = ""
     bio: str = ""
+    media: list = field(default_factory=list)

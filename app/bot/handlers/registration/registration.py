@@ -1,3 +1,4 @@
+from typing import List
 from aiogram import Router
 from aiogram.filters import StateFilter
 from aiogram.types import Message
@@ -17,7 +18,8 @@ router = Router()
 
 
 @router.message(Registration.waiting_for_import)
-async def process_import(message: Message, state: FSMContext, ai_service: AIService):
+async def process_import(message: Message, state: FSMContext, ai_service: AIService,
+                         album: List[Message] = None):
     if not (message.forward_from_chat or message.forward_from):
         await message.answer(LEXICON.error.message_not_forwared)
         return
@@ -31,6 +33,7 @@ async def process_import(message: Message, state: FSMContext, ai_service: AIServ
         return
     msg = await message.answer(LEXICON.process.import_profile)
     profile_data = await extract_profile_data(ai_service, raw_text)
+    profile_data.media = album
 
     await state.update_data(profile_data=profile_data)
     await show_profile_preview(state, msg, profile_data, has_profile=False)

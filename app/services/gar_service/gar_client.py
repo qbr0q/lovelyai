@@ -20,7 +20,9 @@ class GARService:
             "limit": self._limit,
             "countrycodes": self._countrycodes
         }
-        headers = {"User-Agent": self.user_agent}
+        headers = {
+            "User-Agent": self.user_agent
+        }
 
         response = requests.get(self.base_url, params=params, headers=headers)
         return response.json()

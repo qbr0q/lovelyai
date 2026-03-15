@@ -2,7 +2,7 @@ from aiogram import Bot, Dispatcher
 from aiogram.fsm.storage.memory import MemoryStorage
 
 from app.core import config
-from app.core.middlewares import DbSessionMiddleware, UserRegistrationMiddleware
+from app.core.middlewares import DbSessionMiddleware, UserRegistrationMiddleware, AlbumMiddleware
 from app.core.utils import SimpleObject as so
 from app.database import async_session_factory, init_db
 from app.bot.handlers import routers
@@ -17,6 +17,7 @@ def include_routers(dp):
 def include_middleware(dp):
     dp.update.middleware(DbSessionMiddleware(session_pool=async_session_factory))
     dp.update.middleware(UserRegistrationMiddleware())
+    dp.message.middleware(AlbumMiddleware())
 
 
 async def setup_app():

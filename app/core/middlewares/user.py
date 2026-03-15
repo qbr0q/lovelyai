@@ -1,6 +1,6 @@
 from typing import Callable, Dict, Any, Awaitable
 from aiogram import BaseMiddleware
-from aiogram.types import TelegramObject
+from aiogram.types import TelegramObject, Update
 from sqlmodel.ext.asyncio.session import AsyncSession
 from sqlalchemy import select
 
@@ -11,11 +11,13 @@ class UserRegistrationMiddleware(BaseMiddleware):
     async def __call__(
             self,
             handler: Callable[[TelegramObject, Dict[str, Any]], Awaitable[Any]],
-            event: TelegramObject,
+            event: Update,
             data: Dict[str, Any]
     ) -> Any:
+        message = event.message
+
         session: AsyncSession = data["session"]
-        telegram_id = event.event.from_user.id
+        telegram_id = message.from_user.id
 
         result = await session.execute(select(User).where(User.telegram_id == telegram_id))
         user = result.scalar_one_or_none()

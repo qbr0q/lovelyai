@@ -1,4 +1,5 @@
-from aiogram.types import Message, InlineKeyboardButton, KeyboardButton
+from aiogram.types import Message, InlineKeyboardButton, \
+    KeyboardButton, InputMediaPhoto
 from aiogram.utils.keyboard import ReplyKeyboardBuilder, InlineKeyboardBuilder
 from aiogram.fsm.context import FSMContext
 
@@ -54,10 +55,7 @@ async def show_profile_preview(state: FSMContext, message: Message, profile_data
         SimpleObject(title=LEXICON.button.edit_profile, callback="edit_profile")
     )
     kb = get_inline_keyboard(buttons_data)
-
-    gender_icon = GENDER_ICON_MAP.get(profile_data.gender, "🤍")
-    profile_text = f"{gender_icon} {profile_data.name}, " \
-              f"{profile_data.age}, {profile_data.city}\n{profile_data.bio}"
+    profile_text = get_profile_text(profile_data)
 
     if edit_msg:
         menu_mes = await message.edit_text(profile_text, reply_markup=kb)
@@ -120,3 +118,20 @@ async def prepare_field_edit(profile_data, field: str):
         rm = get_reply_keyboard(reply_button) if current_val else None
 
     return SimpleObject(text=config.text, state=config.state, rm=rm)
+
+
+def get_profile_text(profile_data):
+    gender_icon = GENDER_ICON_MAP.get(profile_data.gender, "🤍")
+    profile_text = f"{gender_icon} {profile_data.name}, " \
+              f"{profile_data.age}, {profile_data.city}\n{profile_data.bio}"
+    return profile_text
+
+
+def get_profile_media(album, profile_text):
+    media_data = []
+    for media in album:
+        media_data.append(
+            InputMediaPhoto(media=media.photo[-1].file_id)
+        )
+    media_data[0].caption = profile_text
+    return media_data
