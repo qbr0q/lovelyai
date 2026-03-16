@@ -11,33 +11,27 @@ from app.bot.handlers.message.utils import fill_profile
 from app.bot.handlers.constants import CREATION_STATE
 from app.database.models import User
 from app.core.lexicon import LEXICON
-from app.services import AIService
+from app.services import AIService, GARService
 
 
 router = Router()
 
 
-@router.message(Registration.waiting_for_import)
+@router.message(Registration.waiting_self_profile)
 async def process_import(message: Message, state: FSMContext, ai_service: AIService,
-                         album: List[Message] = None):
-    if not (message.forward_from_chat or message.forward_from):
-        await message.answer(LEXICON.error.message_not_forwared)
-        return
-
-    if not message.forward_from.is_bot:
-        await message.answer(LEXICON.error.message_forwared_not_from_bot)
-        return
-
+                         gar_service: GARService, album: List[Message] = None):
     raw_text = message.text or message.caption
     if not raw_text:
         return
     msg = await message.answer(LEXICON.process.import_profile)
     profile_data = await extract_profile_data(ai_service, raw_text)
-    profile_data.media = album
+    profile_data.media = album or message.photo
+
+    gar_city = gar_service.get_gar_address(profile_data.city)
+    profile_data.gar_city = gar_city[0].get("name")
 
     await state.update_data(profile_data=profile_data)
     await show_profile_preview(state, msg, profile_data, has_profile=False)
-    await state.set_state(Registration.confirm_profile)
 
 
 @router.message(StateFilter(Registration.edit_gender, Registration.edit_name,

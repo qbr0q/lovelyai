@@ -2,8 +2,8 @@ from aiogram.fsm.state import StatesGroup, State
 
 
 class Registration(StatesGroup):
-    choosing_method = State()
     waiting_for_import = State()
+    waiting_self_profile = State()
     confirm_profile = State()
 
     # create profile

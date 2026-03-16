@@ -9,12 +9,12 @@ class User(SQLModel, table=True):
     id: int = Field(default=None, primary_key=True)
     create_date: datetime = Field(default_factory=datetime.now)
     telegram_id: int = Field(unique=True)
-    gender: str
-    name: str
-    age: int
-    city: str
-    bio: str
-    status: str
+    gender: str = Field(nullable=True)
+    name: str = Field(nullable=True)
+    age: int = Field(nullable=True)
+    city: str = Field(nullable=True)
+    bio: str = Field(nullable=True)
+    status: str = Field(default="inactive")
     deleted: bool = Field(default=False)
 
     filter: Optional["UserFilter"] = Relationship(back_populates="user")

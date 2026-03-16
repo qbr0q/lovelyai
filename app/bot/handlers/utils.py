@@ -39,28 +39,35 @@ def get_start_rm():
 
 
 async def show_profile_preview(state: FSMContext, message: Message, profile_data,
-                               edit_msg=True, has_profile=True):
-    buttons_data = []
-    if not has_profile:
-        buttons_data.append(
-            SimpleObject(title=LEXICON.button.save_profile, callback="save_profile",
-                         style="success")
-        )
-    else:
-        buttons_data.append(
-            SimpleObject(title="Назад к поиску", callback="back_to_search",
-                         style="success")
-        )
-    buttons_data.append(
-        SimpleObject(title=LEXICON.button.edit_profile, callback="edit_profile")
-    )
-    kb = get_inline_keyboard(buttons_data)
+                               has_profile=True):
+    # buttons_data = []
+    # if not has_profile:
+    #     buttons_data.append(
+    #         SimpleObject(title=LEXICON.button.save_profile, callback="save_profile",
+    #                      style="success")
+    #     )
+    # else:
+    #     buttons_data.append(
+    #         SimpleObject(title="Назад к поиску", callback="back_to_search",
+    #                      style="success")
+    #     )
+    # buttons_data.append(
+    #     SimpleObject(title=LEXICON.button.edit_profile, callback="edit_profile")
+    # )
+    # kb = get_reply_keyboard(buttons_data)
     profile_text = get_profile_text(profile_data)
+    profile_media = profile_data.media
 
-    if edit_msg:
-        menu_mes = await message.edit_text(profile_text, reply_markup=kb)
+    if message.media_group_id:
+        media_data = get_profile_media(profile_data.media, profile_text)
+        menu_mes = await message.answer_media_group(media=media_data)
+    elif profile_media:
+        media_data = profile_media[-1]
+        menu_mes = await message.answer_photo(photo=media_data.file_id,
+                                              caption=profile_text)
     else:
-        menu_mes = await message.answer(profile_text, reply_markup=kb)
+        menu_mes = await message.answer(profile_text)
+
     await state.update_data(menu_id=menu_mes.message_id)
 
 
@@ -121,10 +128,25 @@ async def prepare_field_edit(profile_data, field: str):
 
 
 def get_profile_text(profile_data):
-    gender_icon = GENDER_ICON_MAP.get(profile_data.gender, "🤍")
-    profile_text = f"{gender_icon} {profile_data.name}, " \
-              f"{profile_data.age}, {profile_data.city}\n{profile_data.bio}"
-    return profile_text
+    header_parts = []
+
+    if profile_data.name:
+        header_parts.append(profile_data.name)
+    if profile_data.age:
+        header_parts.append(str(profile_data.age))
+
+    header_line = ", ".join(header_parts)
+
+    location_line = f"📍 {profile_data.city} ({profile_data.gar_city})"\
+        if profile_data.city else ""
+
+    parts = [header_line]
+    if location_line:
+        parts.append(location_line)
+    if profile_data.bio:
+        parts.append(f"\n{profile_data.bio}")
+
+    return "\n".join(parts)
 
 
 def get_profile_media(album, profile_text):

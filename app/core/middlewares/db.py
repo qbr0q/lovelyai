@@ -21,6 +21,6 @@ class DbSessionMiddleware(BaseMiddleware):
             try:
                 await session.commit()
             except Exception as e:
-                pass
+                print(e)
 
             return result

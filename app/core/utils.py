@@ -16,5 +16,6 @@ class Profile:
     age: int = 0
     gender: str = ""
     city: str = ""
+    gar_city: str = ""
     bio: str = ""
     media: list = field(default_factory=list)

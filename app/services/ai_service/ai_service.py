@@ -23,12 +23,13 @@ class AIService:
         )
         return client
 
-    async def ai_request(self,
-                         system_prompt: str,
-                         user_prompt: str,
-                         response_type: Literal["text", "json_object"] = "text",
-                         temperature: float = 0.7
-                         ):
+    async def ai_request(
+            self,
+            system_prompt: str,
+            user_prompt: str,
+            response_type: Literal["text", "json_object"] = "text",
+            temperature: float = 0.7
+    ):
         try:
             response = await self.client.chat.completions.create(
                 model=settings.ai.default_model,
