@@ -19,8 +19,8 @@ router = Router()
 async def start(message: Message, state: FSMContext,
                 user: User, session: AsyncSession):
     if not user:
-        # create_user(session, message.from_user.id)
-        await state.set_state(Registration.waiting_self_profile)
+        create_user(session, message.from_user.id)
+    await state.set_state(Registration.waiting_self_profile)
 
     await message.answer(LEXICON.start)
 

@@ -12,7 +12,10 @@ from app.core.utils import SimpleObject
 def get_reply_keyboard(buttons_data, row_width=2):
     builder = ReplyKeyboardBuilder()
 
-    builder.add(*[KeyboardButton(text=text) for text in buttons_data])
+    builder.add(*[KeyboardButton(
+        text=button_data.title,
+        style=button_data.style
+    ) for button_data in buttons_data])
     builder.adjust(row_width)
 
     return builder.as_markup(resize_keyboard=True)
@@ -40,35 +43,34 @@ def get_start_rm():
 
 async def show_profile_preview(state: FSMContext, message: Message, profile_data,
                                has_profile=True):
-    # buttons_data = []
-    # if not has_profile:
-    #     buttons_data.append(
-    #         SimpleObject(title=LEXICON.button.save_profile, callback="save_profile",
-    #                      style="success")
-    #     )
-    # else:
-    #     buttons_data.append(
-    #         SimpleObject(title="Назад к поиску", callback="back_to_search",
-    #                      style="success")
-    #     )
-    # buttons_data.append(
-    #     SimpleObject(title=LEXICON.button.edit_profile, callback="edit_profile")
-    # )
-    # kb = get_reply_keyboard(buttons_data)
+    buttons_data = []
+    if not has_profile:
+        buttons_data.append(
+            SimpleObject(title=LEXICON.button.save_profile, style="success")
+        )
+    else:
+        buttons_data.append(
+            SimpleObject(title="Назад к поиску", style="success")
+        )
+    buttons_data.append(
+        SimpleObject(title=LEXICON.button.edit_profile)
+    )
+    kb = get_reply_keyboard(buttons_data)
     profile_text = get_profile_text(profile_data)
     profile_media = profile_data.media
 
-    if message.media_group_id:
+    await message.answer("Анкета готова!", reply_markup=kb)
+    if len(profile_media) > 1:
         media_data = get_profile_media(profile_data.media, profile_text)
         menu_mes = await message.answer_media_group(media=media_data)
-    elif profile_media:
-        media_data = profile_media[-1]
-        menu_mes = await message.answer_photo(photo=media_data.file_id,
+    elif len(profile_media) == 1:
+        media_data = profile_media[0]
+        menu_mes = await message.answer_photo(photo=media_data[-1].file_id,
                                               caption=profile_text)
     else:
         menu_mes = await message.answer(profile_text)
 
-    await state.update_data(menu_id=menu_mes.message_id)
+    # await state.update_data(menu_id=menu_mes.message_id)
 
 
 def show_editable_profile(profile_data):

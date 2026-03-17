@@ -4,3 +4,4 @@ ai:
 gar:
   base_url: "https://nominatim.openstreetmap.org/search"
   user_agent: "LuvlyAiBot/1.0"
+use_proxy: true

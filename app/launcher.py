@@ -1,7 +1,9 @@
 from aiogram import Bot, Dispatcher
 from aiogram.fsm.storage.memory import MemoryStorage
+from aiogram.client.session.aiohttp import AiohttpSession
 
-from app.core import config
+
+from app.core import config, settings
 from app.core.middlewares import DbSessionMiddleware, UserRegistrationMiddleware, AlbumMiddleware
 from app.core.utils import SimpleObject as so
 from app.database import async_session_factory, init_db
@@ -20,8 +22,16 @@ def include_middleware(dp):
     dp.message.middleware(AlbumMiddleware())
 
 
+def get_proxy_session():
+    session = None
+    if settings.use_proxy:
+        session = AiohttpSession(proxy=config.proxy.url)
+    return session
+
+
 async def setup_app():
-    bot = Bot(token=config.bot_token)
+    session = get_proxy_session()
+    bot = Bot(token=config.bot_token, session=session)
     storage = MemoryStorage()
     dp = Dispatcher(storage=storage)
 

@@ -13,11 +13,13 @@ class User(SQLModel, table=True):
     name: str = Field(nullable=True)
     age: int = Field(nullable=True)
     city: str = Field(nullable=True)
+    gar_city: str = Field(nullable=True)
     bio: str = Field(nullable=True)
     status: str = Field(default="inactive")
     deleted: bool = Field(default=False)
 
     filter: Optional["UserFilter"] = Relationship(back_populates="user")
+    media: Optional["UserMedia"] = Relationship(back_populates="user")
 
 
 class UserFilter(SQLModel, table=True):
@@ -33,3 +35,17 @@ class UserFilter(SQLModel, table=True):
     )
 
     user: Optional["User"] = Relationship(back_populates="filter")
+
+
+class UserMedia(SQLModel, table=True):
+    __tablename__ = "user_media"
+    id: int = Field(default=None, primary_key=True)
+    create_date: datetime = Field(default_factory=datetime.now)
+    file_id: str
+    unique_file_id: str
+    file_type: str = Field(default="photo")
+    user_id: int = Field(
+        sa_column=Column(Integer, ForeignKey("user_account.id", ondelete="CASCADE"))
+    )
+
+    user: Optional["User"] = Relationship(back_populates="media")

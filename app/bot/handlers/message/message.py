@@ -1,26 +1,24 @@
 from aiogram import Router, F
 from aiogram.types import Message
 from aiogram.fsm.context import FSMContext
+from sqlmodel.ext.asyncio.session import AsyncSession
 
 from app.core.lexicon import LEXICON
 from app.bot.states import Registration
 from app.bot.handlers.utils import show_profile_preview
 from app.database.models import User
+from .utils import save_profile
 
 
 router = Router()
 
 
-# @router.message(F.text == LEXICON.button.create_profile)
-# async def start_import(message: Message, state: FSMContext):
-#     await state.set_state(Registration.waiting_self_profile)
-#     await message.answer(LEXICON.state.waiting_self_profile)
-#
-#
-# @router.message(F.text == LEXICON.button.import_profile)
-# async def start_import(message: Message, state: FSMContext):
-#     await state.set_state(Registration.waiting_for_import)
-#     await message.answer(LEXICON.state.waiting_import)
+@router.message(F.text == LEXICON.button.save_profile)
+async def save_profile_handler(message: Message, state: FSMContext,
+                               user: User, session: AsyncSession):
+    profile_data = await state.get_value("profile_data")
+    await save_profile(session, profile_data, user)
+    await message.answer("Успешно сохранено!")
 
 
 @router.message(F.text == "Мой профиль")

@@ -25,7 +25,7 @@ async def process_import(message: Message, state: FSMContext, ai_service: AIServ
         return
     msg = await message.answer(LEXICON.process.import_profile)
     profile_data = await extract_profile_data(ai_service, raw_text)
-    profile_data.media = album or message.photo
+    profile_data.media = album or [message.photo] if message.photo else []
 
     gar_city = gar_service.get_gar_address(profile_data.city)
     profile_data.gar_city = gar_city[0].get("name")
