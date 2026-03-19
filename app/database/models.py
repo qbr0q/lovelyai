@@ -31,7 +31,7 @@ class UserFilter(SQLModel, table=True):
     max_age: int = Field(default=99)
     target_city: str = Field(nullable=True)
     user_id: int = Field(
-        sa_column=Column(Integer, ForeignKey("user_account.id", ondelete="CASCADE"))
+        sa_column=Column(Integer, ForeignKey("user_account.id", ondelete="CASCADE"), unique=True)
     )
 
     user: Optional["User"] = Relationship(back_populates="filter")

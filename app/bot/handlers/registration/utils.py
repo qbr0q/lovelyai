@@ -4,7 +4,7 @@ from aiogram.fsm.context import FSMContext
 
 from app.services.ai_service.prompts.system_prompts import PROFILE_PARSER_SYSTEM
 from app.services.ai_service.prompts.user_prompts import PROFILE_PARSER_USER
-from app.bot.handlers.utils import show_editable_profile
+# from app.bot.handlers.utils import show_editable_profile
 from app.core.utils import Profile
 
 
@@ -27,20 +27,29 @@ async def extract_profile_data(ai_service, raw_text):
     return profile_data
 
 
-async def refresh_edit_menu(message: Message, state: FSMContext):
-    state_data = await state.get_data()
-    profile_data = state_data.get("profile_data")
-    old_menu_id = state_data.get("menu_id")
-    profile_ui = show_editable_profile(profile_data)
+def get_gar_city(gar_service, city):
+    gar_city = ""
+    if city:
+        gar_city = gar_service.get_gar_address(city)
+        if gar_city:
+            gar_city = gar_city[0].get("name")
+    return gar_city
 
-    try:
-        await message.bot.delete_message(message.chat.id, old_menu_id)
-    except Exception as e:
-        pass
 
-    new_msg = await message.answer(
-        text=profile_ui.text,
-        reply_markup=profile_ui.kb
-    )
-
-    await state.update_data(menu_id=new_msg.message_id)
+# async def refresh_edit_menu(message: Message, state: FSMContext):
+#     state_data = await state.get_data()
+#     profile_data = state_data.get("profile_data")
+#     old_menu_id = state_data.get("menu_id")
+#     profile_ui = show_editable_profile(profile_data)
+#
+#     try:
+#         await message.bot.delete_message(message.chat.id, old_menu_id)
+#     except Exception as e:
+#         pass
+#
+#     new_msg = await message.answer(
+#         text=profile_ui.text,
+#         reply_markup=profile_ui.kb
+#     )
+#
+#     await state.update_data(menu_id=new_msg.message_id)

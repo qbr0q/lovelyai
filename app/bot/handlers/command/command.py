@@ -5,7 +5,6 @@ from aiogram.utils.keyboard import InlineKeyboardBuilder
 from aiogram.fsm.context import FSMContext
 from sqlmodel.ext.asyncio.session import AsyncSession
 
-from app.bot.handlers.utils import get_start_rm
 from app.bot.states import Registration
 from app.core.lexicon import LEXICON
 from app.database.models import User

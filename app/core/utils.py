@@ -1,4 +1,5 @@
-from dataclasses import dataclass, field
+from typing import Optional, List
+from pydantic import BaseModel
 
 
 class SimpleObject:
@@ -10,12 +11,11 @@ class SimpleObject:
         return self.__dict__.get(item)
 
 
-@dataclass
-class Profile:
-    name: str = ""
-    age: int = 0
-    gender: str = ""
-    city: str = ""
-    gar_city: str = ""
-    bio: str = ""
-    media: list = field(default_factory=list)
+class Profile(BaseModel):
+    name: Optional[str] = None
+    gender: Optional[str] = None
+    age: Optional[int] = None
+    city: Optional[str] = None
+    gar_city: Optional[str] = None
+    bio: Optional[str] = None
+    media: List[str] = []
