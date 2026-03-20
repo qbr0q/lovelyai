@@ -6,6 +6,7 @@ from pydantic_settings_yaml import YamlBaseSettings
 class AISettings(BaseModel):
     base_url: str
     default_model: str
+    embedder_model: str
 
 
 class GARSettings(BaseModel):

@@ -4,8 +4,8 @@ from aiogram.utils.keyboard import ReplyKeyboardBuilder, InlineKeyboardBuilder
 from aiogram.fsm.context import FSMContext
 
 from app.bot.states import Registration
-from app.bot.handlers.constants import GENDER_ICON_MAP, GENDER_MAP, \
-    GENDER_BUTTONS, FIELDS_CONFIG, INPUT_GENDER_MAP
+# from app.bot.handlers.constants import GENDER_ICON_MAP, GENDER_MAP, \
+#     GENDER_BUTTONS, FIELDS_CONFIG, INPUT_GENDER_MAP
 from app.core.lexicon import LEXICON
 from app.core.utils import SimpleObject
 from app.database.models import UserFilter, UserMedia
@@ -36,24 +36,26 @@ def get_inline_keyboard(raw_buttons_data, row_width=2):
     return builder.as_markup()
 
 
-async def show_profile_preview(state: FSMContext, message: Message, profile_data):
+def get_profile_buttons():
     buttons_data = [
         SimpleObject(title="Смотреть анкеты", style="success"),
         SimpleObject(title="Заполнить заново", style="danger"),
         SimpleObject(title="Изменить описание"),
         SimpleObject(title="Изменить фотографии")
     ]
-    kb = get_reply_keyboard(buttons_data)
+    return get_reply_keyboard(buttons_data)
+
+
+async def show_profile_preview(state: FSMContext, message: Message, profile_data):
     profile_text = get_profile_text(profile_data)
     profile_media = profile_data.media
 
-    await message.answer("Анкета готова!", reply_markup=kb)
     if len(profile_media) > 1:
         media_data = get_profile_media(profile_data.media, profile_text)
         await message.answer_media_group(media=media_data)
     elif len(profile_media) == 1:
-        media_data = profile_media[0].photo
-        await message.answer_photo(photo=media_data[-1].file_id, caption=profile_text)
+        media_data = profile_media[0]
+        await message.answer_photo(photo=media_data.file_id, caption=profile_text)
     else:
         await message.answer(profile_text)
 
@@ -143,30 +145,7 @@ def get_profile_media(album, profile_text):
     media_data = []
     for media in album:
         media_data.append(
-            InputMediaPhoto(media=media.photo[-1].file_id)
+            InputMediaPhoto(media=media.file_id)
         )
     media_data[0].caption = profile_text
     return media_data
-
-
-async def save_profile(session, profile_data, user):
-    user_data = profile_data.model_dump(exclude={"media"}, exclude_unset=True)
-    for k, v in user_data.items():
-        setattr(user, k, v)
-
-    user_filter_record = UserFilter(user_id=user.id)
-
-    user_media_records = []
-    for media in profile_data.media:
-        media_data = media.photo[-1]
-        user_media_records.append(
-            UserMedia(
-                file_id=media_data.file_id,
-                unique_file_id=media_data.file_unique_id,
-                user_id=user.id
-            )
-        )
-
-    session.add(user)
-    session.add(user_filter_record)
-    session.add_all(user_media_records)

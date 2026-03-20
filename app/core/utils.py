@@ -18,4 +18,5 @@ class Profile(BaseModel):
     city: Optional[str] = None
     gar_city: Optional[str] = None
     bio: Optional[str] = None
+    bio_vector: Optional[List[float]] = None
     media: List[str] = []

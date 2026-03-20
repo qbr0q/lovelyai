@@ -1,5 +1,6 @@
-from openai import AsyncOpenAI
 from typing import Literal
+from openai import AsyncOpenAI
+from sentence_transformers import SentenceTransformer
 
 from app.core import settings, config
 
@@ -8,6 +9,7 @@ class AIService:
     def __init__(self):
         self.base_url = settings.ai.base_url
         self.api_key = config.openrouter_api_key
+        self.embedder = SentenceTransformer(settings.ai.embedder_model)
         self._client = None
 
     @property
@@ -48,3 +50,7 @@ class AIService:
         except Exception as e:
             print(f"AI Service Error: {e}")
             return None
+
+    def get_embedding(self, text: str):
+        embedding = self.embedder.encode(text)
+        return embedding.tolist()

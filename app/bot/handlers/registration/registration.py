@@ -6,8 +6,9 @@ from aiogram.fsm.context import FSMContext
 from sqlmodel.ext.asyncio.session import AsyncSession
 
 from app.bot.states import Registration
-from app.bot.handlers.utils import show_profile_preview, save_profile
-from app.bot.handlers.registration.utils import extract_profile_data, get_gar_city
+from app.bot.handlers.utils import show_profile_preview, get_profile_buttons
+from app.bot.handlers.registration.utils import extract_profile_data, get_gar_city,\
+    save_profile
 # from app.bot.handlers.message.utils import fill_profile
 # from app.bot.handlers.constants import CREATION_STATE
 from app.database.models import User
@@ -28,15 +29,28 @@ async def process_import(message: Message, state: FSMContext, ai_service: AIServ
     await message.answer(LEXICON.process.import_profile)
 
     profile_data = await extract_profile_data(ai_service, raw_text)
-    profile_data.media = album or [message] if message.photo else []
+    profile_data.media = prepare_profile_media(album, message.photo)
     profile_data.gar_city = get_gar_city(gar_service, profile_data.city)
+    profile_data.bio_vector = ai_service.get_embedding(
+        profile_data.bio
+    )
+    kb = get_profile_buttons()
 
     await save_profile(session, profile_data, user)
+    await message.answer("Анкета готова!", reply_markup=kb)
     await show_profile_preview(state, message, profile_data)
 
 
+def prepare_profile_media(album, message_photo):
+    if album:
+        return [media.photo[-1] for media in album]
+    elif message_photo:
+        return [message_photo[-1]]
+    return []
+
+
 @router.message(Registration.profile_menu)
-async def profile_menu():
+async def profile_menu(message: Message):
     pass
 
 

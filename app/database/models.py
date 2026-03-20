@@ -1,5 +1,7 @@
 from sqlmodel import SQLModel, Field, Relationship
 from sqlalchemy import ForeignKey, Column, Integer
+from pgvector.sqlalchemy import Vector
+
 from datetime import datetime
 from typing import Optional, List
 
@@ -15,11 +17,14 @@ class User(SQLModel, table=True):
     city: str = Field(nullable=True)
     gar_city: str = Field(nullable=True)
     bio: str = Field(nullable=True)
+    bio_vector: Optional[List[float]] = Field(
+        sa_column=Column(Vector(384))
+    )
     status: str = Field(default="inactive")
     deleted: bool = Field(default=False)
 
     filter: Optional["UserFilter"] = Relationship(back_populates="user")
-    media: Optional["UserMedia"] = Relationship(back_populates="user")
+    media: List["UserMedia"] = Relationship(back_populates="user")
 
 
 class UserFilter(SQLModel, table=True):
