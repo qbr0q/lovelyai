@@ -1,8 +1,11 @@
-from app.database.models import User
+from app.database.models import User, UserFilter
 
 
-def create_user(session, telegram_id):
-    user_record = User(
+def create_user(telegram_id):
+    user = User(
         telegram_id=telegram_id
     )
-    session.add(user_record)
+    user.filter = UserFilter(
+        telegram_id=telegram_id
+    )
+    return user

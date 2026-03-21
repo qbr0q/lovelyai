@@ -2,7 +2,6 @@ from aiogram import Bot, Dispatcher
 from aiogram.fsm.storage.memory import MemoryStorage
 from aiogram.client.session.aiohttp import AiohttpSession
 
-
 from app.core import config, settings
 from app.core.middlewares import DbSessionMiddleware, UserRegistrationMiddleware, AlbumMiddleware
 from app.core.utils import SimpleObject as so

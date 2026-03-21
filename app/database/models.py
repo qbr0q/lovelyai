@@ -1,5 +1,5 @@
 from sqlmodel import SQLModel, Field, Relationship
-from sqlalchemy import ForeignKey, Column, Integer
+from sqlalchemy import ForeignKey, Column, Integer, DateTime, func
 from pgvector.sqlalchemy import Vector
 
 from datetime import datetime
@@ -7,9 +7,17 @@ from typing import Optional, List
 
 
 class User(SQLModel, table=True):
-    __tablename__ = "user_account"
+    __tablename__ = "user_profile"
     id: int = Field(default=None, primary_key=True)
     create_date: datetime = Field(default_factory=datetime.now)
+    updated_at: datetime = Field(
+        sa_column=Column(
+            DateTime(),
+            default=func.now(),
+            onupdate=func.now(),
+            server_default=func.now()
+        )
+    )
     telegram_id: int = Field(unique=True)
     gender: str = Field(nullable=True)
     name: str = Field(nullable=True)
@@ -24,22 +32,54 @@ class User(SQLModel, table=True):
     deleted: bool = Field(default=False)
 
     filter: Optional["UserFilter"] = Relationship(back_populates="user")
-    media: List["UserMedia"] = Relationship(back_populates="user")
+    media: List["UserMedia"] = Relationship(
+        back_populates="user",
+        sa_relationship_kwargs={
+            "cascade": "all, delete-orphan",
+            "passive_deletes": True
+        }
+    )
+
+    def clear(self):
+        self.gender = ""
+        self.name = ""
+        self.age = 0
+        self.city = ""
+        self.gar_city = ""
+        self.bio = ""
+        self.bio_vector = None
+
+        self.media = []
+        self.filter.clear()
 
 
 class UserFilter(SQLModel, table=True):
     __tablename__ = "user_filter"
     id: int = Field(default=None, primary_key=True)
     create_date: datetime = Field(default_factory=datetime.now)
+    updated_at: datetime = Field(
+        sa_column=Column(
+            DateTime(),
+            default=func.now(),
+            onupdate=func.now(),
+            server_default=func.now()
+        )
+    )
     target_gender: str = Field(nullable=True)
     min_age: int = Field(default=16)
     max_age: int = Field(default=99)
     target_city: str = Field(nullable=True)
     user_id: int = Field(
-        sa_column=Column(Integer, ForeignKey("user_account.id", ondelete="CASCADE"), unique=True)
+        sa_column=Column(Integer, ForeignKey("user_profile.id", ondelete="CASCADE"), unique=True)
     )
 
     user: Optional["User"] = Relationship(back_populates="filter")
+
+    def clear(self):
+        self.target_gender = ""
+        self.min_age = 16
+        self.max_age = 99
+        self.target_city = ""
 
 
 class UserMedia(SQLModel, table=True):
@@ -47,10 +87,10 @@ class UserMedia(SQLModel, table=True):
     id: int = Field(default=None, primary_key=True)
     create_date: datetime = Field(default_factory=datetime.now)
     file_id: str
-    unique_file_id: str
+    file_unique_id: str
     file_type: str = Field(default="photo")
     user_id: int = Field(
-        sa_column=Column(Integer, ForeignKey("user_account.id", ondelete="CASCADE"))
+        sa_column=Column(Integer, ForeignKey("user_profile.id", ondelete="CASCADE"))
     )
 
     user: Optional["User"] = Relationship(back_populates="media")

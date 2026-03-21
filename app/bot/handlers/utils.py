@@ -38,17 +38,20 @@ def get_inline_keyboard(raw_buttons_data, row_width=2):
 
 def get_profile_buttons():
     buttons_data = [
-        SimpleObject(title="Смотреть анкеты", style="success"),
-        SimpleObject(title="Заполнить заново", style="danger"),
-        SimpleObject(title="Изменить описание"),
-        SimpleObject(title="Изменить фотографии")
+        SimpleObject(title=LEXICON.button.go_search, style="success"),
+        SimpleObject(title=LEXICON.button.recreate_profile, style="danger"),
+        SimpleObject(title=LEXICON.button.edit_bio),
+        SimpleObject(title=LEXICON.button.edit_media)
     ]
     return get_reply_keyboard(buttons_data)
 
 
-async def show_profile_preview(state: FSMContext, message: Message, profile_data):
+async def show_profile_preview(message: Message, state: FSMContext, profile_data):
     profile_text = get_profile_text(profile_data)
     profile_media = profile_data.media
+    kb = get_profile_buttons()
+
+    await message.answer("Вот твоя анкета", reply_markup=kb)
 
     if len(profile_media) > 1:
         media_data = get_profile_media(profile_data.media, profile_text)

@@ -8,7 +8,7 @@ from sqlmodel.ext.asyncio.session import AsyncSession
 from app.bot.states import Registration
 from app.bot.handlers.utils import show_profile_preview, get_profile_buttons
 from app.bot.handlers.registration.utils import extract_profile_data, get_gar_city,\
-    save_profile
+    save_profile, prepare_media, record_media
 # from app.bot.handlers.message.utils import fill_profile
 # from app.bot.handlers.constants import CREATION_STATE
 from app.database.models import User
@@ -29,29 +29,56 @@ async def process_import(message: Message, state: FSMContext, ai_service: AIServ
     await message.answer(LEXICON.process.import_profile)
 
     profile_data = await extract_profile_data(ai_service, raw_text)
-    profile_data.media = prepare_profile_media(album, message.photo)
+    profile_data.media = prepare_media(album, message.photo)
     profile_data.gar_city = get_gar_city(gar_service, profile_data.city)
     profile_data.bio_vector = ai_service.get_embedding(
         profile_data.bio
     )
-    kb = get_profile_buttons()
 
     await save_profile(session, profile_data, user)
-    await message.answer("Анкета готова!", reply_markup=kb)
-    await show_profile_preview(state, message, profile_data)
-
-
-def prepare_profile_media(album, message_photo):
-    if album:
-        return [media.photo[-1] for media in album]
-    elif message_photo:
-        return [message_photo[-1]]
-    return []
+    await show_profile_preview(message, state, profile_data)
 
 
 @router.message(Registration.profile_menu)
-async def profile_menu(message: Message):
-    pass
+async def profile_menu(message: Message, state: FSMContext,
+                       session: AsyncSession, user: User):
+    if message.text == LEXICON.button.edit_bio:
+        await message.answer(LEXICON.message.edit_bio)
+        await state.set_state(Registration.waiting_bio)
+    elif message.text == LEXICON.button.edit_media:
+        await message.answer(LEXICON.message.edit_media)
+        await state.set_state(Registration.waiting_media)
+    elif message.text == LEXICON.button.recreate_profile:
+        user.clear()
+        await session.flush()
+
+        await message.answer(LEXICON.message.recreate_profile)
+        await state.set_state(Registration.waiting_self_profile)
+
+
+@router.message(Registration.waiting_bio)
+async def edit_bio(message: Message, state: FSMContext,
+                   user: User, ai_service: AIService):
+    new_bio = message.text
+    if new_bio:
+        new_bio_vector = ai_service.get_embedding(new_bio)
+        user.bio = new_bio
+        user.bio_vector = new_bio_vector
+
+        await show_profile_preview(message, state, user)
+
+
+@router.message(Registration.waiting_media)
+async def edit_media(message: Message, state: FSMContext, user: User,
+                     session: AsyncSession, album: List[Message] = None):
+    media = prepare_media(album, message.photo)
+    if media:
+        user_media_records = record_media(media, user.id)
+        user.media = []
+        session.add_all(user_media_records)
+        await session.refresh(user)
+
+        await show_profile_preview(message, state, user)
 
 
 # @router.message(StateFilter(Registration.edit_gender, Registration.edit_name,

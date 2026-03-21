@@ -19,6 +19,8 @@ class AlbumMiddleware(BaseMiddleware):
             return await handler(message, data)
 
         try:
+            if len(self.album_data[message.media_group_id]) >= 3:
+                return
             self.album_data[message.media_group_id].append(message)
             return
         except KeyError:

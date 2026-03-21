@@ -5,6 +5,9 @@ class Registration(StatesGroup):
     waiting_self_profile = State()
     profile_menu = State()
 
+    waiting_bio = State()
+    waiting_media = State()
+
     # create profile
     # create_gender = State()
     # create_age = State()
