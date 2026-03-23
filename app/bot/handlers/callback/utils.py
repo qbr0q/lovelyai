@@ -1,4 +1,5 @@
 from app.database.models import User, UserFilter
+from app.core.constants import UserStatus
 
 
 async def save_user(session, profile_data, telegram_id):
@@ -9,7 +10,7 @@ async def save_user(session, profile_data, telegram_id):
         age=int(profile_data.age),
         city=profile_data.city,
         bio=profile_data.bio,
-        status="active"
+        status=UserStatus.active
     )
     session.add(user_record)
     await session.flush()

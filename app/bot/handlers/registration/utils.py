@@ -1,11 +1,9 @@
 import json
-from aiogram.types import Message
-from aiogram.fsm.context import FSMContext
+from sqlmodel.ext.asyncio.session import AsyncSession
 
 from app.database.models import UserMedia
 from app.services.ai_service.prompts.system_prompts import PROFILE_PARSER_SYSTEM
 from app.services.ai_service.prompts.user_prompts import PROFILE_PARSER_USER
-# from app.bot.handlers.utils import show_editable_profile
 from app.core.utils import Profile
 
 
@@ -48,7 +46,7 @@ def record_media(profile_data_media, user_id):
     return user_media_records
 
 
-async def save_profile(session, profile_data, user):
+async def save_profile(session: AsyncSession, profile_data, user):
     try:
         user_data = profile_data.model_dump(exclude={"media"}, exclude_unset=True)
         for k, v in user_data.items():

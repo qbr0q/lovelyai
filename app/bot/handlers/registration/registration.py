@@ -1,19 +1,16 @@
 from typing import List
 from aiogram import Router
-from aiogram.filters import StateFilter
 from aiogram.types import Message
 from aiogram.fsm.context import FSMContext
 from sqlmodel.ext.asyncio.session import AsyncSession
 
 from app.bot.states import Registration
-from app.bot.handlers.utils import show_profile_preview, get_profile_buttons
+from app.bot.handlers.utils import show_profile_preview
 from app.bot.handlers.registration.utils import extract_profile_data, get_gar_city,\
     save_profile, prepare_media, record_media
-# from app.bot.handlers.message.utils import fill_profile
-# from app.bot.handlers.constants import CREATION_STATE
 from app.database.models import User
 from app.core.lexicon import LEXICON
-from app.services import AIService, GARService
+from app.services import AIService, GARService, MatchingService
 
 
 router = Router()
@@ -40,8 +37,8 @@ async def process_import(message: Message, state: FSMContext, ai_service: AIServ
 
 
 @router.message(Registration.profile_menu)
-async def profile_menu(message: Message, state: FSMContext,
-                       session: AsyncSession, user: User):
+async def profile_menu(message: Message, state: FSMContext, user: User,
+                       session: AsyncSession, match_service: MatchingService):
     if message.text == LEXICON.button.edit_bio:
         await message.answer(LEXICON.message.edit_bio)
         await state.set_state(Registration.waiting_bio)
@@ -54,6 +51,8 @@ async def profile_menu(message: Message, state: FSMContext,
 
         await message.answer(LEXICON.message.recreate_profile)
         await state.set_state(Registration.waiting_self_profile)
+    elif message.text == LEXICON.button.find_matches:
+        await match_service.get_match(user, session)
 
 
 @router.message(Registration.waiting_bio)

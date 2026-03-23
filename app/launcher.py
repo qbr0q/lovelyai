@@ -7,7 +7,7 @@ from app.core.middlewares import DbSessionMiddleware, UserRegistrationMiddleware
 from app.core.utils import SimpleObject as so
 from app.database import async_session_factory, init_db
 from app.bot.handlers import routers
-from app.services import AIService, GARService
+from app.services import AIService, GARService, MatchingService
 
 
 def include_routers(dp):
@@ -36,6 +36,7 @@ async def setup_app():
 
     ai_service = AIService()
     gar_service = GARService()
+    match_service = MatchingService()
 
     include_routers(dp)
     include_middleware(dp)
@@ -46,7 +47,8 @@ async def setup_app():
         bot=bot,
         dp=dp,
         ai_service=ai_service,
-        gar_service=gar_service
+        gar_service=gar_service,
+        match_service=match_service
     )
 
 
@@ -59,5 +61,6 @@ async def start_app():
     await dp.start_polling(
         bot,
         ai_service=app_components.ai_service,
-        gar_service=app_components.gar_service
+        gar_service=app_components.gar_service,
+        match_service=app_components.match_service
     )

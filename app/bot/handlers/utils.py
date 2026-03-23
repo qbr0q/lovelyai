@@ -38,7 +38,7 @@ def get_inline_keyboard(raw_buttons_data, row_width=2):
 
 def get_profile_buttons():
     buttons_data = [
-        SimpleObject(title=LEXICON.button.go_search, style="success"),
+        SimpleObject(title=LEXICON.button.find_matches, style="success"),
         SimpleObject(title=LEXICON.button.recreate_profile, style="danger"),
         SimpleObject(title=LEXICON.button.edit_bio),
         SimpleObject(title=LEXICON.button.edit_media)
