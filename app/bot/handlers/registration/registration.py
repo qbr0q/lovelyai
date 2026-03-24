@@ -5,7 +5,7 @@ from aiogram.fsm.context import FSMContext
 from sqlmodel.ext.asyncio.session import AsyncSession
 
 from app.bot.states import Registration
-from app.bot.handlers.utils import show_profile_preview
+from app.bot.handlers.utils import show_self_profile, get_search_buttons, process_match_queue
 from app.bot.handlers.registration.utils import extract_profile_data, get_gar_city,\
     save_profile, prepare_media, record_media
 from app.database.models import User
@@ -33,7 +33,7 @@ async def process_import(message: Message, state: FSMContext, ai_service: AIServ
     )
 
     await save_profile(session, profile_data, user)
-    await show_profile_preview(message, state, profile_data)
+    await show_self_profile(message, state, profile_data)
 
 
 @router.message(Registration.profile_menu)
@@ -52,7 +52,16 @@ async def profile_menu(message: Message, state: FSMContext, user: User,
         await message.answer(LEXICON.message.recreate_profile)
         await state.set_state(Registration.waiting_self_profile)
     elif message.text == LEXICON.button.find_matches:
-        await match_service.get_match(user, session)
+        kb = get_search_buttons()
+        await message.answer("Ищу подходящие анкеты...", reply_markup=kb)
+        await process_match_queue(message, state, user, session, match_service)
+        await state.set_state(Registration.match_action)
+
+
+@router.message(Registration.match_action)
+async def match_action(message: Message, state: FSMContext, user: User,
+                       session: AsyncSession, match_service: MatchingService):
+    await process_match_queue(message, state, user, session, match_service)
 
 
 @router.message(Registration.waiting_bio)
@@ -64,7 +73,7 @@ async def edit_bio(message: Message, state: FSMContext,
         user.bio = new_bio
         user.bio_vector = new_bio_vector
 
-        await show_profile_preview(message, state, user)
+        await show_self_profile(message, state, user)
 
 
 @router.message(Registration.waiting_media)
@@ -77,7 +86,7 @@ async def edit_media(message: Message, state: FSMContext, user: User,
         session.add_all(user_media_records)
         await session.refresh(user)
 
-        await show_profile_preview(message, state, user)
+        await show_self_profile(message, state, user)
 
 
 # @router.message(StateFilter(Registration.edit_gender, Registration.edit_name,

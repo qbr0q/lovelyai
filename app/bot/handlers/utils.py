@@ -2,13 +2,13 @@ from aiogram.types import Message, InlineKeyboardButton, \
     KeyboardButton, InputMediaPhoto
 from aiogram.utils.keyboard import ReplyKeyboardBuilder, InlineKeyboardBuilder
 from aiogram.fsm.context import FSMContext
+from sqlmodel.ext.asyncio.session import AsyncSession
 
 from app.bot.states import Registration
-# from app.bot.handlers.constants import GENDER_ICON_MAP, GENDER_MAP, \
-#     GENDER_BUTTONS, FIELDS_CONFIG, INPUT_GENDER_MAP
 from app.core.lexicon import LEXICON
 from app.core.utils import SimpleObject
-from app.database.models import UserFilter, UserMedia
+from app.database.models import User
+from app.services import MatchingService
 
 
 def get_reply_keyboard(buttons_data, row_width=2):
@@ -46,12 +46,40 @@ def get_profile_buttons():
     return get_reply_keyboard(buttons_data)
 
 
-async def show_profile_preview(message: Message, state: FSMContext, profile_data):
-    profile_text = get_profile_text(profile_data)
-    profile_media = profile_data.media
+def get_search_buttons():
+    buttons_data = [
+        SimpleObject(title="🧡"),
+        SimpleObject(title="👎")
+    ]
+    return get_reply_keyboard(buttons_data)
+
+
+async def process_match_queue(message: Message, state: FSMContext, user: User,
+                              session: AsyncSession, match_service: MatchingService):
+    queue = await state.get_value("match_profiles")
+    if not queue:
+        queue = await match_service.get_match(user, session)
+    profile_data = queue.pop(0)
+
+    await state.update_data(match_profiles=queue)
+    await show_match_profile(message, state, profile_data)
+
+
+async def show_self_profile(message: Message, state: FSMContext, profile_data):
     kb = get_profile_buttons()
 
     await message.answer("Вот твоя анкета", reply_markup=kb)
+    await send_profile_card(message, profile_data)
+    await state.set_state(Registration.profile_menu)
+
+
+async def show_match_profile(message: Message, state: FSMContext, profile_data):
+    await send_profile_card(message, profile_data)
+
+
+async def send_profile_card(message, profile_data):
+    profile_text = get_profile_text(profile_data)
+    profile_media = profile_data.media
 
     if len(profile_media) > 1:
         media_data = get_profile_media(profile_data.media, profile_text)
@@ -61,8 +89,6 @@ async def show_profile_preview(message: Message, state: FSMContext, profile_data
         await message.answer_photo(photo=media_data.file_id, caption=profile_text)
     else:
         await message.answer(profile_text)
-
-    await state.set_state(Registration.profile_menu)
 
 
 # def show_editable_profile(profile_data):
@@ -123,7 +149,10 @@ async def show_profile_preview(message: Message, state: FSMContext, profile_data
 
 def get_profile_text(profile_data):
     header_parts = []
+    match_percent = ""
 
+    if hasattr(profile_data, "match_percent"):
+        match_percent = f"✨{profile_data.match_percent} совместимости\n"
     if profile_data.name:
         header_parts.append(profile_data.name)
     if profile_data.age:
@@ -135,7 +164,7 @@ def get_profile_text(profile_data):
     if profile_data.gar_city:
         location_line += f" ({profile_data.gar_city})"
 
-    parts = [header_line]
+    parts = [match_percent, header_line]
     if location_line:
         parts.append(location_line)
     if profile_data.bio:

@@ -8,7 +8,7 @@ from sqlmodel.ext.asyncio.session import AsyncSession
 from app.bot.states import Registration
 from app.core.lexicon import LEXICON
 from app.database.models import User
-from app.bot.handlers.utils import show_profile_preview
+from app.bot.handlers.utils import show_self_profile
 from .utils import create_user
 
 
@@ -25,7 +25,7 @@ async def start(message: Message, state: FSMContext,
         await state.set_state(Registration.waiting_self_profile)
         await message.answer(LEXICON.start)
     else:
-        await show_profile_preview(message, state, user)
+        await show_self_profile(message, state, user)
 
 
 @router.message(Command("app"))

@@ -8,6 +8,8 @@ class Registration(StatesGroup):
     waiting_bio = State()
     waiting_media = State()
 
+    match_action = State()
+
     # create profile
     # create_gender = State()
     # create_age = State()

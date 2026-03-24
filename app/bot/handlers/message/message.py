@@ -5,7 +5,7 @@ from sqlmodel.ext.asyncio.session import AsyncSession
 
 from app.core.lexicon import LEXICON
 from app.bot.states import Registration
-from app.bot.handlers.utils import show_profile_preview
+from app.bot.handlers.utils import show_self_profile
 from app.database.models import User
 
 

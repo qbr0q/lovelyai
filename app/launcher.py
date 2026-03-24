@@ -5,7 +5,7 @@ from aiogram.client.session.aiohttp import AiohttpSession
 from app.core import config, settings
 from app.core.middlewares import DbSessionMiddleware, UserRegistrationMiddleware, AlbumMiddleware
 from app.core.utils import SimpleObject as so
-from app.database import async_session_factory, init_db
+from app.database import async_session_factory
 from app.bot.handlers import routers
 from app.services import AIService, GARService, MatchingService
 
@@ -40,8 +40,6 @@ async def setup_app():
 
     include_routers(dp)
     include_middleware(dp)
-
-    await init_db()
 
     return so(
         bot=bot,
