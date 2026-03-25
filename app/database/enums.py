@@ -7,6 +7,6 @@ class UserStatus(str, Enum):
     banned = "banned"
 
 
-# class ActionType(str, Enum):
-#     like = "like"
-#     dislike = "dislike"
+class ActionType(str, Enum):
+    like = "like"
+    dislike = "dislike"

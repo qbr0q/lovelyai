@@ -2,7 +2,7 @@ from sqlmodel import select, and_
 from sqlalchemy.orm import selectinload
 from sqlmodel.ext.asyncio.session import AsyncSession
 
-from app.database.models import User
+from app.database.models import User, MatchAction
 from app.database.enums import UserStatus
 from .utils import MatchProfile
 
@@ -12,14 +12,19 @@ class MatchingService:
         distance_col = User.bio_vector.cosine_distance(
             current_user.bio_vector
         ).label("dist")
+        rated_profiles = select(MatchAction.to_user_id).where(
+            MatchAction.from_user_id == current_user.id
+        )
 
         base_statement = select(
             User, distance_col
-        ).filter(and_(
+        ).where(and_(
             User.status == UserStatus.active,
             User.deleted == False,
             User.id != current_user.id
-        )).order_by(
+        )).where(
+            ~User.id.in_(rated_profiles)
+        ).order_by(
             distance_col.asc()
         ).options(
             selectinload(User.media)
@@ -57,6 +62,7 @@ class MatchingService:
     def _prepare_profile(user, dist):
         match_profile = MatchProfile(
             id=user.id,
+            telegram_id=user.telegram_id,
             name=user.name,
             age=user.age,
             city=user.city,

@@ -7,6 +7,7 @@ class MatchProfileMedia(BaseModel):
 
 class MatchProfile(BaseModel):
     id: int
+    telegram_id: int
     name: str
     age: int
     city: str

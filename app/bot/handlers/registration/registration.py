@@ -1,4 +1,5 @@
 from typing import List
+import asyncio
 from aiogram import Router
 from aiogram.types import Message
 from aiogram.fsm.context import FSMContext
@@ -7,8 +8,8 @@ from sqlmodel.ext.asyncio.session import AsyncSession
 from app.bot.states import Registration
 from app.bot.handlers.utils import show_self_profile, get_search_buttons, process_match_queue
 from app.bot.handlers.registration.utils import extract_profile_data, get_gar_city,\
-    save_profile, prepare_media, record_media
-from app.database.models import User
+    save_profile, prepare_media, record_media, match_action_mapping, notify_target_user
+from app.database.models import User, MatchAction
 from app.core.lexicon import LEXICON
 from app.services import AIService, GARService, MatchingService
 
@@ -61,7 +62,18 @@ async def profile_menu(message: Message, state: FSMContext, user: User,
 @router.message(Registration.match_action)
 async def match_action(message: Message, state: FSMContext, user: User,
                        session: AsyncSession, match_service: MatchingService):
-    await process_match_queue(message, state, user, session, match_service)
+    if message.text in (LEXICON.button.like, LEXICON.button.dislike):
+        target_user = await state.get_value("current_match")
+        action = match_action_mapping.get(message.text)
+        record = MatchAction(
+            from_user_id=user.id,
+            to_user_id=target_user.id,
+            action=action
+        )
+        asyncio.create_task(notify_target_user(message.bot, target_user.telegram_id))
+        session.add(record)
+
+        await process_match_queue(message, state, user, session, match_service)
 
 
 @router.message(Registration.waiting_bio)

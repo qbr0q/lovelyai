@@ -61,7 +61,10 @@ async def process_match_queue(message: Message, state: FSMContext, user: User,
         queue = await match_service.get_match(user, session)
     profile_data = queue.pop(0)
 
-    await state.update_data(match_profiles=queue)
+    await state.update_data(
+        match_profiles=queue,
+        current_match=profile_data
+    )
     await show_match_profile(message, state, profile_data)
 
 

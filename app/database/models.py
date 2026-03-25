@@ -38,7 +38,7 @@ class User(SQLModel, table=True):
             "passive_deletes": True
         }
     )
-    actions_received: List["MatchAction"] = Relationship(
+    match_received: List["MatchAction"] = Relationship(
         sa_relationship_kwargs={"foreign_keys": "[MatchAction.to_user_id]", "back_populates": "to_user"}
     )
 
