@@ -71,7 +71,7 @@ def prepare_media(album, message_photo):
 
 async def notify_target_user(bot, target_id):
     try:
-        await bot.send_message(target_id, f"Твоя анкета кому то понравилась ;)")
+        await bot.send_message(target_id, LEXICON.message.match_notify)
     except Exception as e:
         print()
 
