@@ -1,15 +1,14 @@
 from sqlmodel import SQLModel, Field, Relationship
-from sqlalchemy import ForeignKey, Column, Integer, DateTime, func
+from sqlalchemy import ForeignKey, Column, Integer, DateTime, func, UniqueConstraint, Index
 from pgvector.sqlalchemy import Vector
-
 from datetime import datetime
 from typing import Optional, List
 
 
 class User(SQLModel, table=True):
     __tablename__ = "user_profile"
-    id: int = Field(default=None, primary_key=True)
-    create_date: datetime = Field(default_factory=datetime.now)
+    id: int = Field(default=None, primary_key=True, unique=True)
+    created_at: datetime = Field(default_factory=datetime.now)
     updated_at: datetime = Field(
         sa_column=Column(
             DateTime(),
@@ -23,7 +22,7 @@ class User(SQLModel, table=True):
     name: str = Field(nullable=True)
     age: int = Field(nullable=True)
     city: str = Field(nullable=True)
-    gar_city: str = Field(nullable=True)
+    gar_city: str = Field(nullable=True, index=True)
     bio: str = Field(nullable=True)
     bio_vector: Optional[List[float]] = Field(
         sa_column=Column(Vector(384))
@@ -38,6 +37,9 @@ class User(SQLModel, table=True):
             "cascade": "all, delete-orphan",
             "passive_deletes": True
         }
+    )
+    actions_received: List["MatchAction"] = Relationship(
+        sa_relationship_kwargs={"foreign_keys": "[MatchAction.to_user_id]", "back_populates": "to_user"}
     )
 
     def clear(self):
@@ -55,8 +57,8 @@ class User(SQLModel, table=True):
 
 class UserFilter(SQLModel, table=True):
     __tablename__ = "user_filter"
-    id: int = Field(default=None, primary_key=True)
-    create_date: datetime = Field(default_factory=datetime.now)
+    id: int = Field(default=None, primary_key=True, unique=True)
+    created_at: datetime = Field(default_factory=datetime.now)
     updated_at: datetime = Field(
         sa_column=Column(
             DateTime(),
@@ -85,12 +87,38 @@ class UserFilter(SQLModel, table=True):
 class UserMedia(SQLModel, table=True):
     __tablename__ = "user_media"
     id: int = Field(default=None, primary_key=True)
-    create_date: datetime = Field(default_factory=datetime.now)
+    created_at: datetime = Field(default_factory=datetime.now)
     file_id: str
     file_unique_id: str
     file_type: str = Field(default="photo")
     user_id: int = Field(
-        sa_column=Column(Integer, ForeignKey("user_profile.id", ondelete="CASCADE"))
+        sa_column=Column(Integer, ForeignKey("user_profile.id", ondelete="CASCADE"), index=True)
     )
 
     user: Optional["User"] = Relationship(back_populates="media")
+
+
+class MatchAction(SQLModel, table=True):
+    __tablename__ = "match_action"
+    __table_args__ = (
+        # ускоряет проверку "кто кого оценил" в разы, не дает лайкнуть одного и того же человека дважды
+        UniqueConstraint("from_user_id", "to_user_id", name="unique_match_action"),
+        Index("ix_match_action_to_user", "to_user_id"),
+    )
+    id: int = Field(default=None, primary_key=True)
+    created_at: datetime = Field(default_factory=datetime.now)
+    from_user_id: int = Field(
+        sa_column=Column(Integer, ForeignKey("user_profile.id", ondelete="CASCADE"), index=True)
+    )
+    to_user_id: int = Field(
+        sa_column=Column(Integer, ForeignKey("user_profile.id", ondelete="CASCADE"), index=True)
+    )
+    action: str = Field(index=True)
+    is_match: bool = Field(default=False, nullable=True)
+
+    from_user: "User" = Relationship(
+        sa_relationship_kwargs={"foreign_keys": "[MatchAction.from_user_id]"}
+    )
+    to_user: "User" = Relationship(
+        sa_relationship_kwargs={"foreign_keys": "[MatchAction.to_user_id]"}
+    )

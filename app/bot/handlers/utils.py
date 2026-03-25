@@ -48,8 +48,8 @@ def get_profile_buttons():
 
 def get_search_buttons():
     buttons_data = [
-        SimpleObject(title="🧡"),
-        SimpleObject(title="👎")
+        SimpleObject(title=LEXICON.button.like, style="success"),
+        SimpleObject(title=LEXICON.button.dislike, style="danger")
     ]
     return get_reply_keyboard(buttons_data)
 

@@ -3,7 +3,7 @@ from sqlalchemy.orm import selectinload
 from sqlmodel.ext.asyncio.session import AsyncSession
 
 from app.database.models import User
-from app.core.constants import UserStatus
+from app.database.enums import UserStatus
 from .utils import MatchProfile
 
 

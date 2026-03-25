@@ -8,10 +8,12 @@ LEXICON = sn(
           "Фотки кидай сразу в это же сообщение.",
     button=sn(
         my_profile="Мой профиль",
-        find_matches="Смотреть анкеты",
-        recreate_profile="Заполнить заново",
-        edit_bio="Изменить описание",
-        edit_media="Изменить фотографии"
+        find_matches="🔍 Смотреть анкеты",
+        recreate_profile="🔄 Заполнить заново",
+        edit_bio="📝 Изменить описание",
+        edit_media="🖼️ Изменить фотографии",
+        like="❤",
+        dislike="👎"
     ),
     message=sn(
         edit_bio="Теперь напиши новое описание",

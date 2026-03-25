@@ -1,5 +1,5 @@
 from app.database.models import User, UserFilter
-from app.core.constants import UserStatus
+from app.database.enums import UserStatus
 
 
 async def save_user(session, profile_data, telegram_id):
