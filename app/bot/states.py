@@ -4,11 +4,10 @@ from aiogram.fsm.state import StatesGroup, State
 class Registration(StatesGroup):
     waiting_self_profile = State()
     profile_menu = State()
-
     waiting_bio = State()
     waiting_media = State()
-
     match_action = State()
+    manage_account = State()
 
     # create profile
     # create_gender = State()

@@ -12,7 +12,7 @@ class GARService:
         self._addressdetails = 1
         self._countrycodes = "ru"
 
-    def get_gar_address(self, query):
+    def fetch_gar_address(self, query):
         params = {
             "q": query,
             "format": self._format,
@@ -26,3 +26,11 @@ class GARService:
 
         response = requests.get(self.base_url, params=params, headers=headers)
         return response.json()
+
+    def fetch_gar_city(self, city):
+        gar_city = ""
+        if city:
+            gar_city = self.fetch_gar_address(city)
+            if gar_city:
+                gar_city = gar_city[0].get("name")
+        return gar_city

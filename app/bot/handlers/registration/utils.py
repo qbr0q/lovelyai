@@ -26,15 +26,6 @@ async def extract_profile_data(ai_service, raw_text):
     return profile_data
 
 
-def get_gar_city(gar_service, city):
-    gar_city = ""
-    if city:
-        gar_city = gar_service.get_gar_address(city)
-        if gar_city:
-            gar_city = gar_city[0].get("name")
-    return gar_city
-
-
 def record_media(profile_data_media, user_id):
     user_media_records = []
     for media_data in profile_data_media:
@@ -69,11 +60,9 @@ def prepare_media(album, message_photo):
     return []
 
 
-async def notify_target_user(bot, target_id):
-    try:
-        await bot.send_message(target_id, LEXICON.message.match_notify)
-    except Exception as e:
-        print()
+def account_message():
+    message = f"⚙ Управление аккаунтом"
+    return message
 
 
 match_action_mapping = {

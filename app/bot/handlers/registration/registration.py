@@ -6,10 +6,14 @@ from aiogram.fsm.context import FSMContext
 from sqlmodel.ext.asyncio.session import AsyncSession
 
 from app.bot.states import Registration
-from app.bot.handlers.utils import show_self_profile, get_search_buttons, process_match_queue
-from app.bot.handlers.registration.utils import extract_profile_data, get_gar_city,\
-    save_profile, prepare_media, record_media, match_action_mapping, notify_target_user
+from app.bot.handlers.utils import show_self_profile, process_match_queue, \
+    notify_target_user
+from app.bot.handlers.kb import search_buttons, account_buttons
+from app.bot.handlers.registration.utils import extract_profile_data, \
+    save_profile, prepare_media, record_media, match_action_mapping, \
+    account_message
 from app.database.models import User, MatchAction
+from app.database.enums import UserStatus
 from app.core.lexicon import LEXICON
 from app.services import AIService, GARService, MatchingService
 
@@ -28,7 +32,7 @@ async def process_import(message: Message, state: FSMContext, ai_service: AIServ
 
     profile_data = await extract_profile_data(ai_service, raw_text)
     profile_data.media = prepare_media(album, message.photo)
-    profile_data.gar_city = get_gar_city(gar_service, profile_data.city)
+    profile_data.gar_city = gar_service.fetch_gar_city(profile_data.city)
     profile_data.bio_vector = ai_service.get_embedding(
         profile_data.bio
     )
@@ -53,8 +57,10 @@ async def profile_menu(message: Message, state: FSMContext, user: User,
         await message.answer(LEXICON.message.recreate_profile)
         await state.set_state(Registration.waiting_self_profile)
     elif message.text == LEXICON.button.find_matches:
-        kb = get_search_buttons()
-        await message.answer("Ищу подходящие анкеты...", reply_markup=kb)
+        kb = search_buttons()
+        user.status = UserStatus.active
+
+        await message.answer(LEXICON.process.search_match, reply_markup=kb)
         await process_match_queue(message, state, user, session, match_service)
         await state.set_state(Registration.match_action)
 
@@ -74,6 +80,22 @@ async def match_action(message: Message, state: FSMContext, user: User,
         session.add(record)
 
         await process_match_queue(message, state, user, session, match_service)
+    elif message.text == LEXICON.button.account:
+        msg = account_message()
+        kb = account_buttons()
+
+        await state.set_state(Registration.manage_account)
+        await message.answer(msg, reply_markup=kb)
+
+
+@router.message(Registration.manage_account)
+async def manage_account(message: Message, state: FSMContext, user: User):
+    if message.text == LEXICON.button.profile:
+        await show_self_profile(message, state, user)
+    elif message.text == LEXICON.button.profile:
+        pass
+    elif message.text == LEXICON.button.likes:
+        pass
 
 
 @router.message(Registration.waiting_bio)

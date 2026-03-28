@@ -1,57 +1,12 @@
-from aiogram.types import Message, InlineKeyboardButton, \
-    KeyboardButton, InputMediaPhoto
-from aiogram.utils.keyboard import ReplyKeyboardBuilder, InlineKeyboardBuilder
+from aiogram.types import Message, InputMediaPhoto
 from aiogram.fsm.context import FSMContext
 from sqlmodel.ext.asyncio.session import AsyncSession
 
 from app.bot.states import Registration
-from app.core.lexicon import LEXICON
-from app.core.utils import SimpleObject
+from app.bot.handlers.kb import profile_buttons
 from app.database.models import User
 from app.services import MatchingService
-
-
-def get_reply_keyboard(buttons_data, row_width=2):
-    builder = ReplyKeyboardBuilder()
-
-    builder.add(*[KeyboardButton(
-        text=button_data.title,
-        style=button_data.style
-    ) for button_data in buttons_data])
-    builder.adjust(row_width)
-
-    return builder.as_markup(resize_keyboard=True)
-
-
-def get_inline_keyboard(raw_buttons_data, row_width=2):
-    builder = InlineKeyboardBuilder()
-
-    buttons_data = [InlineKeyboardButton(text=button_data.title,
-                                         callback_data=button_data.callback,
-                                         style=button_data.style)
-                    for button_data in raw_buttons_data]
-    builder.add(*buttons_data)
-    builder.adjust(row_width)
-
-    return builder.as_markup()
-
-
-def get_profile_buttons():
-    buttons_data = [
-        SimpleObject(title=LEXICON.button.find_matches, style="success"),
-        SimpleObject(title=LEXICON.button.recreate_profile, style="danger"),
-        SimpleObject(title=LEXICON.button.edit_bio),
-        SimpleObject(title=LEXICON.button.edit_media)
-    ]
-    return get_reply_keyboard(buttons_data)
-
-
-def get_search_buttons():
-    buttons_data = [
-        SimpleObject(title=LEXICON.button.like, style="success"),
-        SimpleObject(title=LEXICON.button.dislike, style="danger")
-    ]
-    return get_reply_keyboard(buttons_data)
+from app.core.lexicon import LEXICON
 
 
 async def process_match_queue(message: Message, state: FSMContext, user: User,
@@ -59,24 +14,27 @@ async def process_match_queue(message: Message, state: FSMContext, user: User,
     queue = await state.get_value("match_profiles")
     if not queue:
         queue = await match_service.get_match(user, session)
+    if not queue:
+        await message.answer(LEXICON.error.match_over)
+        return
     profile_data = queue.pop(0)
 
     await state.update_data(
         match_profiles=queue,
         current_match=profile_data
     )
-    await show_match_profile(message, state, profile_data)
+    await show_match_profile(message, profile_data)
 
 
 async def show_self_profile(message: Message, state: FSMContext, profile_data):
-    kb = get_profile_buttons()
+    kb = profile_buttons()
 
     await message.answer("Вот твоя анкета", reply_markup=kb)
     await send_profile_card(message, profile_data)
     await state.set_state(Registration.profile_menu)
 
 
-async def show_match_profile(message: Message, state: FSMContext, profile_data):
+async def show_match_profile(message: Message, profile_data):
     await send_profile_card(message, profile_data)
 
 
@@ -92,6 +50,10 @@ async def send_profile_card(message, profile_data):
         await message.answer_photo(photo=media_data.file_id, caption=profile_text)
     else:
         await message.answer(profile_text)
+
+
+async def notify_target_user(bot, target_id):
+    await bot.send_message(target_id, LEXICON.message.match_notify)
 
 
 # def show_editable_profile(profile_data):

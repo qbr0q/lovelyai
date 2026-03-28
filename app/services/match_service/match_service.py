@@ -1,4 +1,5 @@
-from sqlmodel import select, and_
+import math
+from sqlmodel import select
 from sqlalchemy.orm import selectinload
 from sqlmodel.ext.asyncio.session import AsyncSession
 
@@ -8,6 +9,10 @@ from .utils import MatchProfile
 
 
 class MatchingService:
+    def __init__(self):
+        self.midpoint = 0.4
+        self.sharpness = -15
+
     async def get_match(self, current_user: User, session: AsyncSession):
         distance_col = User.bio_vector.cosine_distance(
             current_user.bio_vector
@@ -18,11 +23,11 @@ class MatchingService:
 
         base_statement = select(
             User, distance_col
-        ).where(and_(
+        ).where(
             User.status == UserStatus.active,
             User.deleted == False,
             User.id != current_user.id
-        )).where(
+        ).where(
             ~User.id.in_(rated_profiles)
         ).order_by(
             distance_col.asc()
@@ -58,8 +63,7 @@ class MatchingService:
             result.append(match_profile)
         return result
 
-    @staticmethod
-    def _prepare_profile(user, dist):
+    def _prepare_profile(self, user, dist):
         match_profile = MatchProfile(
             id=user.id,
             telegram_id=user.telegram_id,
@@ -69,6 +73,11 @@ class MatchingService:
             gar_city=user.gar_city,
             bio=user.bio,
             media=user.media,
-            match_percent=f"{max(0, (1 - dist)) * 100:.0f}%"
+            match_percent=f"{self._match_percent(dist):.0f}%"
         )
         return match_profile
+
+    def _match_percent(self, dist):
+        return 1 / (1 + math.exp(
+            self.sharpness * (dist - self.midpoint)
+        )) * 100

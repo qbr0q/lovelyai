@@ -1,13 +1,14 @@
 from sqlmodel import SQLModel, Field, Relationship
-from sqlalchemy import ForeignKey, Column, Integer, DateTime, func, UniqueConstraint, Index
+from sqlalchemy import ForeignKey, Column, Integer, DateTime, func, UniqueConstraint, Index, BigInteger
 from pgvector.sqlalchemy import Vector
 from datetime import datetime
 from typing import Optional, List
+from .enums import UserStatus
 
 
 class User(SQLModel, table=True):
     __tablename__ = "user_profile"
-    id: int = Field(default=None, primary_key=True, unique=True)
+    id: int = Field(default=None, primary_key=True)
     created_at: datetime = Field(default_factory=datetime.now)
     updated_at: datetime = Field(
         sa_column=Column(
@@ -17,7 +18,7 @@ class User(SQLModel, table=True):
             server_default=func.now()
         )
     )
-    telegram_id: int = Field(unique=True)
+    telegram_id: int = Field(sa_column=Column(BigInteger, unique=True))
     gender: str = Field(nullable=True)
     name: str = Field(nullable=True)
     age: int = Field(nullable=True)
@@ -43,6 +44,7 @@ class User(SQLModel, table=True):
     )
 
     def clear(self):
+        self.status = UserStatus.inactive
         self.gender = ""
         self.name = ""
         self.age = 0
@@ -54,10 +56,15 @@ class User(SQLModel, table=True):
         self.media = []
         self.filter.clear()
 
+    @property
+    def is_empty(self):
+        return self.name is None and self.gender is None and \
+                    self.age is None and self.city is None and self.bio is None
+
 
 class UserFilter(SQLModel, table=True):
     __tablename__ = "user_filter"
-    id: int = Field(default=None, primary_key=True, unique=True)
+    id: int = Field(default=None, primary_key=True)
     created_at: datetime = Field(default_factory=datetime.now)
     updated_at: datetime = Field(
         sa_column=Column(
@@ -68,8 +75,8 @@ class UserFilter(SQLModel, table=True):
         )
     )
     target_gender: str = Field(nullable=True)
-    min_age: int = Field(default=16)
-    max_age: int = Field(default=99)
+    min_age: int = Field(nullable=True)
+    max_age: int = Field(nullable=True)
     target_city: str = Field(nullable=True)
     user_id: int = Field(
         sa_column=Column(Integer, ForeignKey("user_profile.id", ondelete="CASCADE"), unique=True)

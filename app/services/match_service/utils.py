@@ -4,6 +4,9 @@ from pydantic import BaseModel
 class MatchProfileMedia(BaseModel):
     file_id: str
 
+    class Config:
+        from_attributes = True
+
 
 class MatchProfile(BaseModel):
     id: int
