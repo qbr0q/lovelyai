@@ -17,8 +17,11 @@ class MatchingService:
         distance_col = User.bio_vector.cosine_distance(
             current_user.bio_vector
         ).label("dist")
-        rated_profiles = select(MatchAction.to_user_id).where(
-            MatchAction.from_user_id == current_user.id
+        excluded_ids_query = (
+            select(MatchAction.to_user_id).where(MatchAction.from_user_id == current_user.id)
+            .union_all(
+                select(MatchAction.from_user_id).where(MatchAction.to_user_id == current_user.id)
+            )
         )
 
         base_statement = select(
@@ -28,7 +31,7 @@ class MatchingService:
             User.deleted == False,
             User.id != current_user.id
         ).where(
-            ~User.id.in_(rated_profiles)
+            User.id.not_in(excluded_ids_query)
         ).order_by(
             distance_col.asc()
         ).options(
@@ -81,3 +84,28 @@ class MatchingService:
         return 1 / (1 + math.exp(
             self.sharpness * (dist - self.midpoint)
         )) * 100
+
+    async def fetch_received_like(self, session, current_user: User):
+        distance_col = User.bio_vector.cosine_distance(
+            current_user.bio_vector
+        ).label("dist")
+
+        statement = (
+            select(User, distance_col)
+            .join(
+                MatchAction, MatchAction.from_user_id == User.id
+            )
+            .where(
+                MatchAction.to_user_id == current_user.id,
+                MatchAction.is_match.is_(None)
+            ).order_by(
+                distance_col.asc()
+            ).options(
+                selectinload(User.media)
+            )
+        )
+        result = await session.execute(statement)
+        received_like = self.prepare_profiles(
+            result.all()
+        )
+        return received_like

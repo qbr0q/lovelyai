@@ -9,27 +9,53 @@ from app.services import MatchingService
 from app.core.lexicon import LEXICON
 
 
-async def process_match_queue(message: Message, state: FSMContext, user: User,
-                              session: AsyncSession, match_service: MatchingService):
-    queue = await state.get_value("match_profiles")
+async def generic_queue_manager(message: Message, state: FSMContext,
+                                key: str, fetch_coro, error_text: str):
+    queue = await state.get_value(key)
+
     if not queue:
-        queue = await match_service.get_match(user, session)
+        queue = await fetch_coro
+
     if not queue:
-        await message.answer(LEXICON.error.match_over)
+        await message.answer(error_text)
         return
+
     profile_data = queue.pop(0)
 
-    await state.update_data(
-        match_profiles=queue,
-        current_match=profile_data
+    await state.update_data({
+        key: queue,
+        f"current_{key}": profile_data
+    })
+
+    return profile_data
+
+
+async def process_match_queue(message: Message, state: FSMContext, user: User,
+                              session: AsyncSession, match_service: MatchingService):
+    profile_data = await generic_queue_manager(
+        message, state, "match_queue",
+        match_service.get_match(user, session),
+        LEXICON.error.match_over
     )
-    await show_match_profile(message, profile_data)
+    if profile_data:
+        await show_match_profile(message, profile_data)
+
+
+async def process_like_queue(message: Message, state: FSMContext, user: User,
+                             session: AsyncSession, match_service: MatchingService):
+    profile_data = await generic_queue_manager(
+        message, state, "match_queue",
+        match_service.fetch_received_like(session, user),
+        LEXICON.error.match_over
+    )
+    if profile_data:
+        await show_match_profile(message, profile_data)
 
 
 async def show_self_profile(message: Message, state: FSMContext, profile_data):
     kb = profile_buttons()
 
-    await message.answer("Вот твоя анкета", reply_markup=kb)
+    await message.answer(LEXICON.message.current_profile, reply_markup=kb)
     await send_profile_card(message, profile_data)
     await state.set_state(Registration.profile_menu)
 

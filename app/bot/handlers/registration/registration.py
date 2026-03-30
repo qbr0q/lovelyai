@@ -7,7 +7,7 @@ from sqlmodel.ext.asyncio.session import AsyncSession
 
 from app.bot.states import Registration
 from app.bot.handlers.utils import show_self_profile, process_match_queue, \
-    notify_target_user
+    notify_target_user, process_like_queue
 from app.bot.handlers.kb import search_buttons, account_buttons
 from app.bot.handlers.registration.utils import extract_profile_data, \
     save_profile, prepare_media, record_media, match_action_mapping, \
@@ -44,19 +44,20 @@ async def process_import(message: Message, state: FSMContext, ai_service: AIServ
 @router.message(Registration.profile_menu)
 async def profile_menu(message: Message, state: FSMContext, user: User,
                        session: AsyncSession, match_service: MatchingService):
-    if message.text == LEXICON.button.edit_bio:
+    message_text = message.text
+    if message_text == LEXICON.button.edit_bio:
         await message.answer(LEXICON.message.edit_bio)
         await state.set_state(Registration.waiting_bio)
-    elif message.text == LEXICON.button.edit_media:
+    elif message_text == LEXICON.button.edit_media:
         await message.answer(LEXICON.message.edit_media)
         await state.set_state(Registration.waiting_media)
-    elif message.text == LEXICON.button.recreate_profile:
+    elif message_text == LEXICON.button.recreate_profile:
         user.clear()
         await session.flush()
 
         await message.answer(LEXICON.message.recreate_profile)
         await state.set_state(Registration.waiting_self_profile)
-    elif message.text == LEXICON.button.find_matches:
+    elif message_text == LEXICON.button.find_matches:
         kb = search_buttons()
         user.status = UserStatus.active
 
@@ -68,19 +69,22 @@ async def profile_menu(message: Message, state: FSMContext, user: User,
 @router.message(Registration.match_action)
 async def match_action(message: Message, state: FSMContext, user: User,
                        session: AsyncSession, match_service: MatchingService):
-    if message.text in (LEXICON.button.like, LEXICON.button.dislike):
-        target_user = await state.get_value("current_match")
-        action = match_action_mapping.get(message.text)
-        record = MatchAction(
-            from_user_id=user.id,
-            to_user_id=target_user.id,
-            action=action
-        )
-        asyncio.create_task(notify_target_user(message.bot, target_user.telegram_id))
-        session.add(record)
+    message_text = message.text
+    if message_text in (LEXICON.button.like, LEXICON.button.dislike):
+        target_user = await state.get_value("current_match_queue")
+        if target_user:
+            action = match_action_mapping.get(message.text)
+            record = MatchAction(
+                from_user_id=user.id,
+                to_user_id=target_user.id,
+                action=action
+            )
+            if message_text == LEXICON.button.like:
+                asyncio.create_task(notify_target_user(message.bot, target_user.telegram_id))
+            session.add(record)
 
-        await process_match_queue(message, state, user, session, match_service)
-    elif message.text == LEXICON.button.account:
+            await process_match_queue(message, state, user, session, match_service)
+    elif message_text == LEXICON.button.account:
         msg = account_message()
         kb = account_buttons()
 
@@ -89,13 +93,19 @@ async def match_action(message: Message, state: FSMContext, user: User,
 
 
 @router.message(Registration.manage_account)
-async def manage_account(message: Message, state: FSMContext, user: User):
-    if message.text == LEXICON.button.profile:
+async def manage_account(message: Message, state: FSMContext, session: AsyncSession,
+                         user: User, match_service: MatchingService):
+    message_text = message.text
+    if message_text == LEXICON.button.profile:
         await show_self_profile(message, state, user)
-    elif message.text == LEXICON.button.profile:
+    elif message_text == LEXICON.button.profile:
         pass
-    elif message.text == LEXICON.button.likes:
-        pass
+    elif message_text == LEXICON.button.likes:
+        kb = search_buttons()
+
+        await message.answer("Вот кто тебя лайкнул", reply_markup=kb)
+        await process_like_queue(message, state, user, session, match_service)
+        await state.set_state(Registration.received_like_action)
 
 
 @router.message(Registration.waiting_bio)

@@ -7,6 +7,7 @@ class Registration(StatesGroup):
     waiting_bio = State()
     waiting_media = State()
     match_action = State()
+    received_like_action = State()
     manage_account = State()
 
     # create profile

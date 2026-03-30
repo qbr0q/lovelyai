@@ -11,10 +11,10 @@ class MatchProfileMedia(BaseModel):
 class MatchProfile(BaseModel):
     id: int
     telegram_id: int
-    name: str
-    age: int
-    city: str
-    gar_city: str
-    bio: str
+    name: str | None = None
+    age: int | None = None
+    city: str | None = None
+    gar_city: str | None = None
+    bio: str | None = None
     media: list[MatchProfileMedia] = []
     match_percent: str | None = None

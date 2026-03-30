@@ -121,7 +121,7 @@ class MatchAction(SQLModel, table=True):
         sa_column=Column(Integer, ForeignKey("user_profile.id", ondelete="CASCADE"), index=True)
     )
     action: str = Field(index=True)
-    is_match: bool = Field(default=False, nullable=True)
+    is_match: bool = Field(default=None, nullable=True)
 
     from_user: "User" = Relationship(
         sa_relationship_kwargs={"foreign_keys": "[MatchAction.from_user_id]"}
