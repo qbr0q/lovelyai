@@ -11,6 +11,7 @@ class MatchProfileMedia(BaseModel):
 class MatchProfile(BaseModel):
     id: int
     telegram_id: int
+    username: str | None = ""
     name: str | None = None
     age: int | None = None
     city: str | None = None

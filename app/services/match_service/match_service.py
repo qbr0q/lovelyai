@@ -70,6 +70,7 @@ class MatchingService:
         match_profile = MatchProfile(
             id=user.id,
             telegram_id=user.telegram_id,
+            username=user.username,
             name=user.name,
             age=user.age,
             city=user.city,
@@ -109,3 +110,16 @@ class MatchingService:
             result.all()
         )
         return received_like
+
+    @staticmethod
+    async def fetch_current_match(session, from_user_id, to_user_id):
+        statement = (
+            select(MatchAction)
+            .where(
+                MatchAction.from_user_id == from_user_id,
+                MatchAction.to_user_id == to_user_id,
+                MatchAction.is_match.is_(None)
+            )
+        )
+        result = await session.execute(statement)
+        return result.scalar_one_or_none()

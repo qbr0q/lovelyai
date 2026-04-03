@@ -1,55 +1,9 @@
 from aiogram.types import Message, InputMediaPhoto
 from aiogram.fsm.context import FSMContext
-from sqlmodel.ext.asyncio.session import AsyncSession
 
 from app.bot.states import Registration
 from app.bot.handlers.kb import profile_buttons
-from app.database.models import User
-from app.services import MatchingService
 from app.core.lexicon import LEXICON
-
-
-async def generic_queue_manager(message: Message, state: FSMContext,
-                                key: str, fetch_coro, error_text: str):
-    queue = await state.get_value(key)
-
-    if not queue:
-        queue = await fetch_coro
-
-    if not queue:
-        await message.answer(error_text)
-        return
-
-    profile_data = queue.pop(0)
-
-    await state.update_data({
-        key: queue,
-        f"current_{key}": profile_data
-    })
-
-    return profile_data
-
-
-async def process_match_queue(message: Message, state: FSMContext, user: User,
-                              session: AsyncSession, match_service: MatchingService):
-    profile_data = await generic_queue_manager(
-        message, state, "match_queue",
-        match_service.get_match(user, session),
-        LEXICON.error.match_over
-    )
-    if profile_data:
-        await show_match_profile(message, profile_data)
-
-
-async def process_like_queue(message: Message, state: FSMContext, user: User,
-                             session: AsyncSession, match_service: MatchingService):
-    profile_data = await generic_queue_manager(
-        message, state, "match_queue",
-        match_service.fetch_received_like(session, user),
-        LEXICON.error.match_over
-    )
-    if profile_data:
-        await show_match_profile(message, profile_data)
 
 
 async def show_self_profile(message: Message, state: FSMContext, profile_data):
@@ -78,8 +32,8 @@ async def send_profile_card(message, profile_data):
         await message.answer(profile_text)
 
 
-async def notify_target_user(bot, target_id):
-    await bot.send_message(target_id, LEXICON.message.match_notify)
+async def notify_target_user(bot, target_id, msg):
+    await bot.send_message(target_id, msg)
 
 
 # def show_editable_profile(profile_data):

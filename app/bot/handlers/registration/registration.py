@@ -1,19 +1,21 @@
 from typing import List
 import asyncio
 from aiogram import Router
+from aiogram.filters import StateFilter
 from aiogram.types import Message
 from aiogram.fsm.context import FSMContext
 from sqlmodel.ext.asyncio.session import AsyncSession
 
 from app.bot.states import Registration
-from app.bot.handlers.utils import show_self_profile, process_match_queue, \
-    notify_target_user, process_like_queue
+from app.bot.handlers.utils import show_self_profile, notify_target_user
 from app.bot.handlers.kb import search_buttons, account_buttons
 from app.bot.handlers.registration.utils import extract_profile_data, \
     save_profile, prepare_media, record_media, match_action_mapping, \
     account_message
+from app.bot.handlers.registration.queue_profile import process_match_queue,\
+    process_like_queue, queue_config
 from app.database.models import User, MatchAction
-from app.database.enums import UserStatus
+from app.database.enums import UserStatus, QueueName
 from app.core.lexicon import LEXICON
 from app.services import AIService, GARService, MatchingService
 
@@ -66,30 +68,56 @@ async def profile_menu(message: Message, state: FSMContext, user: User,
         await state.set_state(Registration.match_action)
 
 
-@router.message(Registration.match_action)
-async def match_action(message: Message, state: FSMContext, user: User,
-                       session: AsyncSession, match_service: MatchingService):
-    message_text = message.text
-    if message_text in (LEXICON.button.like, LEXICON.button.dislike):
-        target_user = await state.get_value("current_match_queue")
-        if target_user:
-            action = match_action_mapping.get(message.text)
-            record = MatchAction(
-                from_user_id=user.id,
-                to_user_id=target_user.id,
-                action=action
-            )
-            if message_text == LEXICON.button.like:
-                asyncio.create_task(notify_target_user(message.bot, target_user.telegram_id))
-            session.add(record)
-
-            await process_match_queue(message, state, user, session, match_service)
-    elif message_text == LEXICON.button.account:
+@router.message(StateFilter(
+    Registration.match_action, Registration.received_like_action
+))
+async def reaction_action(message: Message, state: FSMContext, user: User,
+                          session: AsyncSession, match_service: MatchingService):
+    if message.text == LEXICON.button.account:
         msg = account_message()
         kb = account_buttons()
 
         await state.set_state(Registration.manage_account)
         await message.answer(msg, reply_markup=kb)
+
+    if message.text not in (LEXICON.button.like, LEXICON.button.dislike):
+        return
+
+    current_state = await state.get_state()
+    action = match_action_mapping.get(message.text)
+    is_like = message.text == LEXICON.button.like
+    config = queue_config.get(current_state)
+
+    target_user = await state.get_value(config.key)
+    if not target_user:
+        return
+
+    if config.key == QueueName.CURRENT_MATCH:
+        record = MatchAction(
+            from_user_id=user.id,
+            to_user_id=target_user.id,
+            action=action
+        )
+        session.add(record)
+    elif config.key == QueueName.CURRENT_RECEIVED_LIKE:
+        current_match = await match_service.fetch_current_match(
+            session, from_user_id=target_user.id, to_user_id=user.id
+        )
+        current_match.is_match = is_like
+
+    if is_like:
+        if config.key == QueueName.CURRENT_MATCH:
+            asyncio.create_task(
+                notify_target_user(message.bot, target_user.telegram_id, config.msg)
+            )
+        else:
+            await asyncio.gather(
+                notify_target_user(message.bot, target_user.telegram_id, config.msg % target_user.username),
+                notify_target_user(message.bot, user.telegram_id, config.msg % user.username),
+                return_exceptions=True
+            )
+
+    await config.process_queue(message, state, user, session, match_service)
 
 
 @router.message(Registration.manage_account)

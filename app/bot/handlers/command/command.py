@@ -19,7 +19,7 @@ router = Router()
 async def start(message: Message, state: FSMContext,
                 user: User, session: AsyncSession):
     if not user:
-        user = create_user(message.from_user.id)
+        user = create_user(message.from_user)
         session.add(user)
     if user.is_empty:
         await state.set_state(Registration.waiting_self_profile)

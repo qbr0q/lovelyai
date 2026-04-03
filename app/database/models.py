@@ -19,6 +19,7 @@ class User(SQLModel, table=True):
         )
     )
     telegram_id: int = Field(sa_column=Column(BigInteger, unique=True))
+    username: str = Field(nullable=True)
     gender: str = Field(nullable=True)
     name: str = Field(nullable=True)
     age: int = Field(nullable=True)
