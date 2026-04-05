@@ -2,11 +2,9 @@ import json
 from sqlmodel.ext.asyncio.session import AsyncSession
 
 from app.database.models import UserMedia
-from app.database.enums import ActionType
 from app.services.ai_service.prompts.system_prompts import PROFILE_PARSER_SYSTEM
 from app.services.ai_service.prompts.user_prompts import PROFILE_PARSER_USER
 from app.core.utils import Profile
-from app.core.lexicon import LEXICON
 
 
 async def extract_profile_data(ai_service, raw_text):
@@ -58,17 +56,6 @@ def prepare_media(album, message_photo):
     elif message_photo:
         return [message_photo[-1]]
     return []
-
-
-def account_message():
-    message = f"⚙ Управление аккаунтом"
-    return message
-
-
-match_action_mapping = {
-    LEXICON.button.like: ActionType.like,
-    LEXICON.button.dislike: ActionType.dislike,
-}
 
 
 # async def refresh_edit_menu(message: Message, state: FSMContext):

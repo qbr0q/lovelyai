@@ -1,5 +1,6 @@
 from aiogram.types import Message, InputMediaPhoto
 from aiogram.fsm.context import FSMContext
+from aiogram.enums import ParseMode
 
 from app.bot.states import Registration
 from app.bot.handlers.kb import profile_buttons
@@ -33,7 +34,7 @@ async def send_profile_card(message, profile_data):
 
 
 async def notify_target_user(bot, target_id, msg):
-    await bot.send_message(target_id, msg)
+    await bot.send_message(target_id, msg, parse_mode=ParseMode.HTML)
 
 
 # def show_editable_profile(profile_data):
@@ -126,3 +127,7 @@ def get_profile_media(album, profile_text):
         )
     media_data[0].caption = profile_text
     return media_data
+
+
+def user_link(user):
+    return f'<a href="tg://user?id={user.telegram_id}">{LEXICON.message.match_account}</a>'

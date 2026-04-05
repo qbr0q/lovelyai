@@ -7,13 +7,12 @@ from aiogram.fsm.context import FSMContext
 from sqlmodel.ext.asyncio.session import AsyncSession
 
 from app.bot.states import Registration
-from app.bot.handlers.utils import show_self_profile, notify_target_user
-from app.bot.handlers.kb import search_buttons, account_buttons
+from app.bot.handlers.utils import show_self_profile, notify_target_user, user_link
+from app.bot.handlers.kb import action_buttons, account_buttons
 from app.bot.handlers.registration.utils import extract_profile_data, \
-    save_profile, prepare_media, record_media, match_action_mapping, \
-    account_message
+    save_profile, prepare_media, record_media
 from app.bot.handlers.registration.queue_profile import process_match_queue,\
-    process_like_queue, queue_config
+    process_like_queue, queue_config, match_action_mapping
 from app.database.models import User, MatchAction
 from app.database.enums import UserStatus, QueueName
 from app.core.lexicon import LEXICON
@@ -60,12 +59,15 @@ async def profile_menu(message: Message, state: FSMContext, user: User,
         await message.answer(LEXICON.message.recreate_profile)
         await state.set_state(Registration.waiting_self_profile)
     elif message_text == LEXICON.button.find_matches:
-        kb = search_buttons()
         user.status = UserStatus.active
 
-        await message.answer(LEXICON.process.search_match, reply_markup=kb)
+        await message.answer(LEXICON.process.search_match)
         await process_match_queue(message, state, user, session, match_service)
-        await state.set_state(Registration.match_action)
+    elif message_text == LEXICON.button.manage_account:
+        kb = account_buttons()
+
+        await state.set_state(Registration.manage_account)
+        await message.answer(LEXICON.message.account, reply_markup=kb)
 
 
 @router.message(StateFilter(
@@ -73,19 +75,19 @@ async def profile_menu(message: Message, state: FSMContext, user: User,
 ))
 async def reaction_action(message: Message, state: FSMContext, user: User,
                           session: AsyncSession, match_service: MatchingService):
-    if message.text == LEXICON.button.account:
-        msg = account_message()
+    message_text = message.text
+    if message_text == LEXICON.button.account:
         kb = account_buttons()
 
         await state.set_state(Registration.manage_account)
-        await message.answer(msg, reply_markup=kb)
+        await message.answer(LEXICON.message.account, reply_markup=kb)
 
-    if message.text not in (LEXICON.button.like, LEXICON.button.dislike):
+    if message_text not in (LEXICON.button.like, LEXICON.button.dislike):
         return
 
     current_state = await state.get_state()
-    action = match_action_mapping.get(message.text)
-    is_like = message.text == LEXICON.button.like
+    action = match_action_mapping.get(message_text)
+    is_like = message_text == LEXICON.button.like
     config = queue_config.get(current_state)
 
     target_user = await state.get_value(config.key)
@@ -112,8 +114,10 @@ async def reaction_action(message: Message, state: FSMContext, user: User,
             )
         else:
             await asyncio.gather(
-                notify_target_user(message.bot, target_user.telegram_id, config.msg % target_user.username),
-                notify_target_user(message.bot, user.telegram_id, config.msg % user.username),
+                notify_target_user(message.bot, target_user.telegram_id,
+                                   config.msg % user_link(user)),
+                notify_target_user(message.bot, user.telegram_id,
+                                   config.msg % user_link(target_user)),
                 return_exceptions=True
             )
 
@@ -129,11 +133,8 @@ async def manage_account(message: Message, state: FSMContext, session: AsyncSess
     elif message_text == LEXICON.button.profile:
         pass
     elif message_text == LEXICON.button.likes:
-        kb = search_buttons()
-
-        await message.answer("Вот кто тебя лайкнул", reply_markup=kb)
+        await message.answer(LEXICON.process.search_like)
         await process_like_queue(message, state, user, session, match_service)
-        await state.set_state(Registration.received_like_action)
 
 
 @router.message(Registration.waiting_bio)

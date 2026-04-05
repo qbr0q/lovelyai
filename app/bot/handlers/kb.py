@@ -35,12 +35,13 @@ def profile_buttons():
         SimpleObject(title=LEXICON.button.find_matches, style="success"),
         SimpleObject(title=LEXICON.button.recreate_profile, style="danger"),
         SimpleObject(title=LEXICON.button.edit_bio),
-        SimpleObject(title=LEXICON.button.edit_media)
+        SimpleObject(title=LEXICON.button.edit_media),
+        SimpleObject(title=LEXICON.button.manage_account, style="primary")
     ]
     return get_reply_keyboard(buttons_data)
 
 
-def search_buttons():
+def action_buttons():
     buttons_data = [
         SimpleObject(title=LEXICON.button.like, style="success"),
         SimpleObject(title=LEXICON.button.dislike, style="danger"),

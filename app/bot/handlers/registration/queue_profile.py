@@ -1,12 +1,12 @@
-import asyncio
 from aiogram.types import Message
 from aiogram.fsm.context import FSMContext
 from sqlmodel.ext.asyncio.session import AsyncSession
 
 from app.bot.states import Registration
 from app.bot.handlers.utils import show_match_profile
+from app.bot.handlers.kb import action_buttons
 from app.database.models import User
-from app.database.enums import QueueName
+from app.database.enums import QueueName, ActionType
 from app.services import MatchingService
 from app.core.lexicon import LEXICON
 from app.core.utils import SimpleObject as so
@@ -45,6 +45,8 @@ async def process_match_queue(message: Message, state: FSMContext, user: User,
         LEXICON.error.match_over
     )
     if profile_data:
+        await state.set_state(Registration.match_action)
+        await message.answer(LEXICON.message.find_match, reply_markup=action_buttons())
         await show_match_profile(message, profile_data)
 
 
@@ -56,6 +58,8 @@ async def process_like_queue(message: Message, state: FSMContext, user: User,
         LEXICON.error.received_like
     )
     if profile_data:
+        await state.set_state(Registration.received_like_action)
+        await message.answer(LEXICON.message.find_likes, reply_markup=action_buttons())
         await show_match_profile(message, profile_data)
 
 
@@ -70,4 +74,9 @@ queue_config = {
         process_queue=process_like_queue,
         msg=LEXICON.message.response_math
     )
+}
+
+match_action_mapping = {
+    LEXICON.button.like: ActionType.like,
+    LEXICON.button.dislike: ActionType.dislike,
 }
