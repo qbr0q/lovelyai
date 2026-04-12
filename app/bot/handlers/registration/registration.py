@@ -8,7 +8,7 @@ from sqlmodel.ext.asyncio.session import AsyncSession
 
 from app.bot.states import Registration
 from app.bot.handlers.utils import show_self_profile, notify_target_user, user_link
-from app.bot.handlers.kb import action_buttons, account_buttons
+from app.bot.handlers.kb import account_buttons, filter_buttons
 from app.bot.handlers.registration.utils import extract_profile_data, \
     save_profile, prepare_media, record_media
 from app.bot.handlers.registration.queue_profile import process_match_queue,\
@@ -27,7 +27,8 @@ async def process_import(message: Message, state: FSMContext, ai_service: AIServ
                          gar_service: GARService, session: AsyncSession, user: User,
                          album: List[Message] = None):
     raw_text = message.text or message.caption
-    if not raw_text:
+    if len(raw_text.strip()) < 40:
+        await message.answer(LEXICON.error.short_input)
         return
     await message.answer(LEXICON.process.import_profile)
 
@@ -135,6 +136,14 @@ async def manage_account(message: Message, state: FSMContext, session: AsyncSess
     elif message_text == LEXICON.button.likes:
         await message.answer(LEXICON.process.search_like)
         await process_like_queue(message, state, user, session, match_service)
+    # elif message_text == LEXICON.button.filters:
+    #     await state.set_state(Registration.filter_manage)
+    #     await message.answer("фильтры", reply_markup=filter_buttons())
+
+
+@router.message(Registration.filter_manage)
+async def filter_manage():
+    pass
 
 
 @router.message(Registration.waiting_bio)

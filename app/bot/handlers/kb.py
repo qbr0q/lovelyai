@@ -57,3 +57,11 @@ def account_buttons():
         SimpleObject(title=LEXICON.button.likes)
     ]
     return get_reply_keyboard(buttons_data, row_width=3)
+
+
+def filter_buttons():
+    buttons_data = [
+        SimpleObject(title="Что я ищу"),
+        SimpleObject(title="Что я не ищу")
+    ]
+    return get_reply_keyboard(buttons_data)

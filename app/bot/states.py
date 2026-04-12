@@ -9,6 +9,7 @@ class Registration(StatesGroup):
     match_action = State()
     received_like_action = State()
     manage_account = State()
+    filter_manage = State()
 
     # create profile
     # create_gender = State()
