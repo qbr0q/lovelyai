@@ -2,7 +2,7 @@ PROFILE_PARSER_USER = """
 Extract data from the following text:
 
 TEXT:
-"{raw_text}"
+"{%s}"
 
 EXPECTED FORMAT:
 {{

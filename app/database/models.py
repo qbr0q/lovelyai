@@ -43,6 +43,7 @@ class User(SQLModel, table=True):
     match_received: List["MatchAction"] = Relationship(
         sa_relationship_kwargs={"foreign_keys": "[MatchAction.to_user_id]", "back_populates": "to_user"}
     )
+    ai_request: List["AIRequestLog"] = Relationship(back_populates="user")
 
     def clear(self):
         self.status = UserStatus.inactive
@@ -130,3 +131,21 @@ class MatchAction(SQLModel, table=True):
     to_user: "User" = Relationship(
         sa_relationship_kwargs={"foreign_keys": "[MatchAction.to_user_id]"}
     )
+
+
+class AIRequestLog(SQLModel, table=True):
+    __tablename__ = "ai_request_log"
+
+    id: int = Field(default=None, primary_key=True)
+    created_at: datetime = Field(default_factory=datetime.now)
+    action_type: str
+    prompt_text: str
+    completion_text: str
+    tokens_used: int = Field(index=True)
+    response_time: int = Field(index=True)
+    model_name: str
+    user_id: int = Field(
+        sa_column=Column(Integer, ForeignKey("user_profile.id", ondelete="CASCADE"), index=True)
+    )
+
+    user: Optional["User"] = Relationship(back_populates="ai_request")

@@ -17,3 +17,7 @@ class QueueName(StrEnum):
     CURRENT_MATCH = "current-match:queue"
     RECEIVED_LIKE = "like-received:queue"
     CURRENT_RECEIVED_LIKE = "current-like-received:queue"
+
+
+class AiRequestType(StrEnum):
+    create_profile = "create_profile"

@@ -7,6 +7,7 @@ class AISettings(BaseModel):
     base_url: str
     default_model: str
     embedder_model: str
+    daily_limit: int
 
 
 class GARSettings(BaseModel):

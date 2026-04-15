@@ -2,16 +2,15 @@ import json
 from sqlmodel.ext.asyncio.session import AsyncSession
 
 from app.database.models import UserMedia
-from app.services.ai_service.prompts.system_prompts import PROFILE_PARSER_SYSTEM
-from app.services.ai_service.prompts.user_prompts import PROFILE_PARSER_USER
+from app.database.enums import AiRequestType
 from app.core.utils import Profile
 
 
-async def extract_profile_data(ai_service, raw_text):
-    user_prompt = PROFILE_PARSER_USER.format(raw_text=raw_text)
+async def extract_profile_data(ai_service, raw_text, user_id):
     response_raw = await ai_service.ai_request(
-        PROFILE_PARSER_SYSTEM,
-        user_prompt,
+        prompt_text=raw_text,
+        action_type=AiRequestType.create_profile,
+        user_id=user_id,
         response_type="json_object",
         temperature=0
     )

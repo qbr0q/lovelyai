@@ -17,6 +17,7 @@ from app.database.models import User, MatchAction
 from app.database.enums import UserStatus, QueueName
 from app.core.lexicon import LEXICON
 from app.services import AIService, GARService, MatchingService
+from app.services.ai_service.utils import LimitToken
 
 
 router = Router()
@@ -32,15 +33,18 @@ async def process_import(message: Message, state: FSMContext, ai_service: AIServ
         return
     await message.answer(LEXICON.process.import_profile)
 
-    profile_data = await extract_profile_data(ai_service, raw_text)
-    profile_data.media = prepare_media(album, message.photo)
-    profile_data.gar_city = gar_service.fetch_gar_city(profile_data.city)
-    profile_data.bio_vector = ai_service.get_embedding(
-        profile_data.bio
-    )
+    try:
+        profile_data = await extract_profile_data(ai_service, raw_text, user.id)
+        profile_data.media = prepare_media(album, message.photo)
+        profile_data.gar_city = gar_service.fetch_gar_city(profile_data.city)
+        profile_data.bio_vector = ai_service.get_embedding(
+            profile_data.bio
+        )
 
-    await save_profile(session, profile_data, user)
-    await show_self_profile(message, state, profile_data)
+        await save_profile(session, profile_data, user)
+        await show_self_profile(message, state, profile_data)
+    except LimitToken as e:
+        await message.answer(str(e))
 
 
 @router.message(Registration.profile_menu)
