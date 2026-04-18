@@ -1,21 +1,22 @@
-from typing import List
 import asyncio
+from typing import List
 from aiogram import Router
 from aiogram.filters import StateFilter
 from aiogram.types import Message
 from aiogram.fsm.context import FSMContext
 from sqlmodel.ext.asyncio.session import AsyncSession
 
+from app.core import settings, LEXICON
 from app.bot.states import Registration
-from app.bot.handlers.utils import show_self_profile, notify_target_user, user_link
-from app.bot.handlers.kb import account_buttons, filter_buttons
+from app.bot.handlers.utils import show_self_profile, notify_target_user, \
+    user_link, is_subscribed
+from app.bot.handlers.kb import account_buttons, filter_buttons, channel_buttons
 from app.bot.handlers.registration.utils import extract_profile_data, \
     save_profile, prepare_media, record_media
 from app.bot.handlers.registration.queue_profile import process_match_queue,\
     process_like_queue, queue_config, match_action_mapping
 from app.database.models import User, MatchAction
 from app.database.enums import UserStatus, QueueName
-from app.core.lexicon import LEXICON
 from app.services import AIService, GARService, MatchingService
 from app.services.ai_service.utils import LimitToken
 
@@ -41,10 +42,12 @@ async def process_import(message: Message, state: FSMContext, ai_service: AIServ
             profile_data.bio
         )
 
+        user.clear()
         await save_profile(session, profile_data, user)
         await show_self_profile(message, state, profile_data)
     except LimitToken as e:
         await message.answer(str(e))
+        await state.set_state(Registration.profile_menu)
 
 
 @router.message(Registration.profile_menu)
@@ -58,12 +61,13 @@ async def profile_menu(message: Message, state: FSMContext, user: User,
         await message.answer(LEXICON.message.edit_media)
         await state.set_state(Registration.waiting_media)
     elif message_text == LEXICON.button.recreate_profile:
-        user.clear()
-        await session.flush()
-
         await message.answer(LEXICON.message.recreate_profile)
         await state.set_state(Registration.waiting_self_profile)
     elif message_text == LEXICON.button.find_matches:
+        if not await is_subscribed(message.bot, user.telegram_id, settings.channel.id):
+            await message.answer("Подпишись на канал, чтобы открыть доступ к анкетам. 🚀\n\n"
+                                 "Это займет пару секунд.", reply_markup=channel_buttons())
+            return
         user.status = UserStatus.active
 
         await message.answer(LEXICON.process.search_match)

@@ -2,13 +2,13 @@ from aiogram.types import Message
 from aiogram.fsm.context import FSMContext
 from sqlmodel.ext.asyncio.session import AsyncSession
 
+from app.core import LEXICON
 from app.bot.states import Registration
 from app.bot.handlers.utils import show_match_profile
 from app.bot.handlers.kb import action_buttons
 from app.database.models import User
 from app.database.enums import QueueName, ActionType
 from app.services import MatchingService
-from app.core.lexicon import LEXICON
 from app.core.utils import SimpleObject as so
 
 

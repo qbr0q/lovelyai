@@ -1,10 +1,11 @@
+from aiogram import Bot
 from aiogram.types import Message, InputMediaPhoto
 from aiogram.fsm.context import FSMContext
 from aiogram.enums import ParseMode
 
+from app.core import LEXICON
 from app.bot.states import Registration
 from app.bot.handlers.kb import profile_buttons
-from app.core.lexicon import LEXICON
 
 
 async def show_self_profile(message: Message, state: FSMContext, profile_data):
@@ -35,6 +36,54 @@ async def send_profile_card(message, profile_data):
 
 async def notify_target_user(bot, target_id, msg):
     await bot.send_message(target_id, msg, parse_mode=ParseMode.HTML)
+
+
+def get_profile_text(profile_data):
+    header_parts = []
+    match_percent = ""
+
+    if hasattr(profile_data, "match_percent"):
+        match_percent = f"✨{profile_data.match_percent} совместимости\n"
+    if profile_data.name:
+        header_parts.append(profile_data.name)
+    if profile_data.age:
+        header_parts.append(str(profile_data.age))
+
+    header_line = ", ".join(header_parts)
+
+    location_line = f"📍 {profile_data.city}" if profile_data.city else ""
+    if profile_data.gar_city:
+        location_line += f" ({profile_data.gar_city})"
+
+    parts = [match_percent, header_line]
+    if location_line:
+        parts.append(location_line)
+    if profile_data.bio:
+        parts.append(f"\n{profile_data.bio}")
+
+    return "\n".join(parts)
+
+
+def get_profile_media(album, profile_text):
+    media_data = []
+    for media in album:
+        media_data.append(
+            InputMediaPhoto(media=media.file_id)
+        )
+    media_data[0].caption = profile_text
+    return media_data
+
+
+def user_link(user):
+    return f'<a href="tg://user?id={user.telegram_id}">{LEXICON.message.match_account}</a>'
+
+
+async def is_subscribed(bot: Bot, user_id: int, channel_id: int):
+    member = await bot.get_chat_member(chat_id=channel_id, user_id=user_id)
+    return member.status in allowed_member_status
+
+
+allowed_member_status = ["member", "administrator", "creator"]
 
 
 # def show_editable_profile(profile_data):
@@ -91,43 +140,3 @@ async def notify_target_user(bot, target_id, msg):
 #         rm = get_reply_keyboard(reply_button) if current_val else None
 #
 #     return SimpleObject(text=config.text, state=config.state, rm=rm)
-
-
-def get_profile_text(profile_data):
-    header_parts = []
-    match_percent = ""
-
-    if hasattr(profile_data, "match_percent"):
-        match_percent = f"✨{profile_data.match_percent} совместимости\n"
-    if profile_data.name:
-        header_parts.append(profile_data.name)
-    if profile_data.age:
-        header_parts.append(str(profile_data.age))
-
-    header_line = ", ".join(header_parts)
-
-    location_line = f"📍 {profile_data.city}" if profile_data.city else ""
-    if profile_data.gar_city:
-        location_line += f" ({profile_data.gar_city})"
-
-    parts = [match_percent, header_line]
-    if location_line:
-        parts.append(location_line)
-    if profile_data.bio:
-        parts.append(f"\n{profile_data.bio}")
-
-    return "\n".join(parts)
-
-
-def get_profile_media(album, profile_text):
-    media_data = []
-    for media in album:
-        media_data.append(
-            InputMediaPhoto(media=media.file_id)
-        )
-    media_data[0].caption = profile_text
-    return media_data
-
-
-def user_link(user):
-    return f'<a href="tg://user?id={user.telegram_id}">{LEXICON.message.match_account}</a>'

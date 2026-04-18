@@ -15,9 +15,15 @@ class GARSettings(BaseModel):
     user_agent: str
 
 
+class ChannelSettings(BaseModel):
+    id: int
+    url: str
+
+
 class Settings(YamlBaseSettings):
     ai: AISettings
     gar: GARSettings
+    channel: ChannelSettings
     use_proxy: bool = Field(validation_alias="use_proxy")
 
     model_config = SettingsConfigDict(

@@ -1,17 +1,31 @@
 from aiogram import Router, F
-# from aiogram.types import CallbackQuery
-# from aiogram.fsm.context import FSMContext
-# from sqlmodel.ext.asyncio.session import AsyncSession
-#
-# from app.bot.handlers.utils import show_profile_preview, show_editable_profile, \
-#     prepare_field_edit, get_reply_keyboard
-# from app.database.models import User
-# from .utils import save_user
-#
-#
+from aiogram.types import CallbackQuery
+from aiogram.fsm.context import FSMContext
+from sqlmodel.ext.asyncio.session import AsyncSession
+
+from app.core import settings, LEXICON
+from app.services import MatchingService
+from app.bot.handlers.utils import is_subscribed
+from app.bot.handlers.registration.queue_profile import process_match_queue
+from app.database.models import User
+from app.database.enums import UserStatus
+
+
 router = Router()
-#
-#
+
+
+@router.callback_query(F.data == "is_subscribed")
+async def edit_profile(callback: CallbackQuery, state: FSMContext, user: User,
+                       session: AsyncSession, match_service: MatchingService):
+    if not await is_subscribed(callback.bot, user.telegram_id, settings.channel.id):
+        await callback.answer("Вы все еще не подписаны")
+        return
+    user.status = UserStatus.active
+
+    await callback.message.answer(LEXICON.process.search_match)
+    await process_match_queue(callback.message, state, user, session, match_service)
+
+
 # @router.callback_query(F.data == "edit_profile")
 # async def edit_profile(callback: CallbackQuery, state: FSMContext, user: User):
 #     await callback.answer()

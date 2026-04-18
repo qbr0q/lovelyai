@@ -3,10 +3,10 @@ from aiogram.fsm.storage.memory import MemoryStorage
 from aiogram.client.session.aiohttp import AiohttpSession
 
 from app.core import config, settings
-from app.core.middlewares import DbSessionMiddleware, UserRegistrationMiddleware, AlbumMiddleware
+from app.bot.handlers import routers
+from app.bot.middlewares import DbSessionMiddleware, UserRegistrationMiddleware, AlbumMiddleware
 from app.core.utils import SimpleObject as so
 from app.database import SessionLocal
-from app.bot.handlers import routers
 from app.services import AIService, GARService, MatchingService
 
 

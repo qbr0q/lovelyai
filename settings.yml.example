@@ -1,0 +1,12 @@
+ai:
+  base_url: ai-url
+  default_model: MODEL_NAME
+  embedder_model: EMBEDDER_MODEL
+  daily_limit: DAILY_LIMIT
+gar:
+  base_url: gar-url
+  user_agent: USER_AGENT
+channel:
+  id: CHANNEL_ID
+  url: CHANNEL_URL
+use_proxy: false

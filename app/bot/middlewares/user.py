@@ -1,6 +1,6 @@
 from typing import Callable, Dict, Any, Awaitable
 from aiogram import BaseMiddleware
-from aiogram.types import TelegramObject, Update
+from aiogram.types import TelegramObject, Update, User as TgUser
 from sqlmodel.ext.asyncio.session import AsyncSession
 from sqlalchemy import select
 from sqlalchemy.orm import selectinload
@@ -15,10 +15,9 @@ class UserRegistrationMiddleware(BaseMiddleware):
             event: Update,
             data: Dict[str, Any]
     ) -> Any:
-        message = event.message
-
+        tg_user: TgUser = data.get("event_from_user")
         session: AsyncSession = data["session"]
-        telegram_id = message.from_user.id
+        telegram_id = tg_user.id
 
         statement = (
             select(User)
