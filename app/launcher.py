@@ -4,7 +4,8 @@ from aiogram.client.session.aiohttp import AiohttpSession
 
 from app.core import config, settings
 from app.bot.handlers import routers
-from app.bot.middlewares import DbSessionMiddleware, UserRegistrationMiddleware, AlbumMiddleware
+from app.core.middlewares import DbSessionMiddleware, UserRegistrationMiddleware, \
+    AlbumMiddleware, ErrorLoggingMiddleware
 from app.core.utils import SimpleObject as so
 from app.database import SessionLocal
 from app.services import AIService, GARService, MatchingService
@@ -19,6 +20,7 @@ def include_middleware(dp):
     dp.update.middleware(DbSessionMiddleware(session_pool=SessionLocal))
     dp.update.middleware(UserRegistrationMiddleware())
     dp.message.middleware(AlbumMiddleware())
+    dp.errors.outer_middleware(ErrorLoggingMiddleware())
 
 
 def get_proxy_session():
