@@ -1,6 +1,6 @@
 import asyncio
 from typing import List
-from aiogram import Router
+from aiogram import Router, F
 from aiogram.filters import StateFilter
 from aiogram.types import Message
 from aiogram.fsm.context import FSMContext
@@ -24,33 +24,19 @@ from app.services.ai_service.utils import LimitToken
 router = Router()
 
 
-@router.message(Registration.waiting_self_profile)
-async def process_import(message: Message, state: FSMContext, ai_service: AIService,
-                         gar_service: GARService, session: AsyncSession, user: User,
-                         album: List[Message] = None):
-    raw_text = message.text or message.caption
-    if len(raw_text.strip()) < 40:
-        await message.answer(LEXICON.error.short_input)
-        return
-    await message.answer(LEXICON.process.import_profile)
-
-    try:
-        profile_data = await extract_profile_data(ai_service, raw_text, user.id)
-        profile_data.media = prepare_media(album, message.photo)
-        profile_data.gar_city = gar_service.fetch_gar_city(profile_data.city)
-        profile_data.bio_vector = ai_service.get_embedding(
-            profile_data.bio
-        )
-
-        user.clear()
-        await save_profile(session, profile_data, user)
-        await show_self_profile(message, state, profile_data)
-    except LimitToken as e:
-        await message.answer(str(e))
-        await state.set_state(Registration.profile_menu)
-
-
-@router.message(Registration.profile_menu)
+@router.message(
+    StateFilter(
+        Registration.profile_menu, Registration.waiting_bio,
+        Registration.waiting_media, Registration.waiting_self_profile
+    ),
+    F.text.in_([
+        LEXICON.button.edit_bio,
+        LEXICON.button.edit_media,
+        LEXICON.button.recreate_profile,
+        LEXICON.button.manage_account,
+        LEXICON.button.find_matches
+    ])
+)
 async def profile_menu(message: Message, state: FSMContext, user: User,
                        session: AsyncSession, match_service: MatchingService):
     message_text = message.text
@@ -77,6 +63,31 @@ async def profile_menu(message: Message, state: FSMContext, user: User,
 
         await state.set_state(Registration.manage_account)
         await message.answer(LEXICON.message.account, reply_markup=kb)
+
+
+@router.message(Registration.waiting_self_profile)
+async def process_import(message: Message, state: FSMContext, ai_service: AIService,
+                         gar_service: GARService, session: AsyncSession, user: User,
+                         album: List[Message] = None):
+    raw_text = message.text or message.caption
+    if len(raw_text.strip()) < 40:
+        await message.answer(LEXICON.error.short_input)
+        return
+    await message.answer(LEXICON.process.import_profile)
+
+    try:
+        profile_data = await extract_profile_data(ai_service, raw_text, user.id)
+        profile_data.media = prepare_media(album, message.photo)
+        profile_data.gar_city = gar_service.fetch_gar_city(profile_data.city)
+        profile_data.bio_vector = ai_service.get_embedding(
+            profile_data.bio
+        )
+
+        user.clear()
+        await save_profile(session, profile_data, user)
+        await show_self_profile(message, state, profile_data)
+    except LimitToken as e:
+        await message.answer(str(e))
 
 
 @router.message(StateFilter(

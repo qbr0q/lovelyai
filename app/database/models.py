@@ -8,6 +8,7 @@ from .enums import UserStatus
 
 class User(SQLModel, table=True):
     __tablename__ = "user_profile"
+
     id: int = Field(default=None, primary_key=True)
     created_at: datetime = Field(default_factory=datetime.now)
     updated_at: datetime = Field(
@@ -66,6 +67,7 @@ class User(SQLModel, table=True):
 
 class UserFilter(SQLModel, table=True):
     __tablename__ = "user_filter"
+
     id: int = Field(default=None, primary_key=True)
     created_at: datetime = Field(default_factory=datetime.now)
     updated_at: datetime = Field(
@@ -88,13 +90,14 @@ class UserFilter(SQLModel, table=True):
 
     def clear(self):
         self.target_gender = ""
-        self.min_age = 16
-        self.max_age = 99
+        self.min_age = 0
+        self.max_age = 0
         self.target_city = ""
 
 
 class UserMedia(SQLModel, table=True):
     __tablename__ = "user_media"
+
     id: int = Field(default=None, primary_key=True)
     created_at: datetime = Field(default_factory=datetime.now)
     file_id: str
@@ -114,8 +117,17 @@ class MatchAction(SQLModel, table=True):
         UniqueConstraint("from_user_id", "to_user_id", name="unique_match_action"),
         Index("ix_match_action_to_user", "to_user_id"),
     )
+
     id: int = Field(default=None, primary_key=True)
     created_at: datetime = Field(default_factory=datetime.now)
+    updated_at: datetime = Field(
+        sa_column=Column(
+            DateTime(),
+            default=func.now(),
+            onupdate=func.now(),
+            server_default=func.now()
+        )
+    )
     from_user_id: int = Field(
         sa_column=Column(Integer, ForeignKey("user_profile.id", ondelete="CASCADE"), index=True)
     )
