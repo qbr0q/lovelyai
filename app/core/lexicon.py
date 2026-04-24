@@ -17,7 +17,8 @@ LEXICON = so(
         profile="📋 Анкета",
         filters="🔍 Фильтры",
         likes="❤ Лайки",
-        manage_account="⚙ Управление аккаунтом"
+        manage_account="⚙ Управление аккаунтом",
+        set_profile_photo="Поставить из профиля"
     ),
     message=so(
         edit_bio="Теперь напиши новое описание",

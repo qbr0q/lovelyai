@@ -10,7 +10,7 @@ from app.core import settings, LEXICON
 from app.bot.states import Registration
 from app.bot.handlers.utils import show_self_profile, notify_target_user, \
     user_link, is_subscribed
-from app.bot.handlers.kb import account_buttons, filter_buttons, channel_buttons
+from app.bot.handlers.kb import account_buttons, channel_buttons, image_buttons
 from app.bot.handlers.registration.utils import extract_profile_data, \
     save_profile, prepare_media, record_media
 from app.bot.handlers.registration.queue_profile import process_match_queue,\
@@ -44,7 +44,7 @@ async def profile_menu(message: Message, state: FSMContext, user: User,
         await message.answer(LEXICON.message.edit_bio)
         await state.set_state(Registration.waiting_bio)
     elif message_text == LEXICON.button.edit_media:
-        await message.answer(LEXICON.message.edit_media)
+        await message.answer(LEXICON.message.edit_media, reply_markup=image_buttons())
         await state.set_state(Registration.waiting_media)
     elif message_text == LEXICON.button.recreate_profile:
         await message.answer(LEXICON.message.recreate_profile)
@@ -180,7 +180,13 @@ async def edit_bio(message: Message, state: FSMContext,
 @router.message(Registration.waiting_media)
 async def edit_media(message: Message, state: FSMContext, user: User,
                      session: AsyncSession, album: List[Message] = None):
-    media = prepare_media(album, message.photo)
+    profile_photo = None
+    if message.text == LEXICON.button.set_profile_photo:
+        profile_photo_response = await message.bot.get_user_profile_photos(
+            user.telegram_id, limit=1
+        )
+        profile_photo = profile_photo_response.photos[0]
+    media = prepare_media(album, profile_photo or message.photo)
     if media:
         user_media_records = record_media(media, user.id)
         user.media = []

@@ -74,3 +74,10 @@ def channel_buttons():
         SimpleObject(title="Я подписался", style="success", callback="is_subscribed")
     ]
     return get_inline_keyboard(buttons_data, row_width=1)
+
+
+def image_buttons():
+    buttons_data = [
+        SimpleObject(title=LEXICON.button.set_profile_photo),
+    ]
+    return get_reply_keyboard(buttons_data, row_width=1)
