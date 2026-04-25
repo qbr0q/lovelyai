@@ -21,3 +21,12 @@ class QueueName(StrEnum):
 
 class AiRequestType(StrEnum):
     create_profile = "create_profile"
+
+
+class MediaType(StrEnum):
+    photo = "photo"
+
+
+class UserRole(StrEnum):
+    user = "user"
+    admin = "admin"

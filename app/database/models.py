@@ -3,7 +3,7 @@ from sqlalchemy import ForeignKey, Column, Integer, DateTime, func, UniqueConstr
 from pgvector.sqlalchemy import Vector
 from datetime import datetime
 from typing import Optional, List
-from .enums import UserStatus
+from .enums import UserStatus, MediaType, UserRole
 
 
 class User(SQLModel, table=True):
@@ -21,6 +21,7 @@ class User(SQLModel, table=True):
     )
     telegram_id: int = Field(sa_column=Column(BigInteger, unique=True))
     username: str = Field(nullable=True)
+    role: str = Field(default=UserRole.user)
     gender: str = Field(nullable=True)
     name: str = Field(nullable=True)
     age: int = Field(nullable=True)
@@ -30,7 +31,7 @@ class User(SQLModel, table=True):
     bio_vector: Optional[List[float]] = Field(
         sa_column=Column(Vector(384))
     )
-    status: str = Field(default="inactive")
+    status: str = Field(default=UserStatus.inactive)
     deleted: bool = Field(default=False)
 
     filter: Optional["UserFilter"] = Relationship(back_populates="user")
@@ -102,7 +103,7 @@ class UserMedia(SQLModel, table=True):
     created_at: datetime = Field(default_factory=datetime.now)
     file_id: str
     file_unique_id: str
-    file_type: str = Field(default="photo")
+    file_type: str = Field(default=MediaType.photo)
     user_id: int = Field(
         sa_column=Column(Integer, ForeignKey("user_profile.id", ondelete="CASCADE"), index=True)
     )

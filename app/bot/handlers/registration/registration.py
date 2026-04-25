@@ -10,7 +10,8 @@ from app.core import settings, LEXICON
 from app.bot.states import Registration
 from app.bot.handlers.utils import show_self_profile, notify_target_user, \
     user_link, is_subscribed
-from app.bot.handlers.kb import account_buttons, channel_buttons, image_buttons
+from app.bot.handlers.kb import account_buttons, channel_buttons, \
+    image_buttons, profile_buttons
 from app.bot.handlers.registration.utils import extract_profile_data, \
     save_profile, prepare_media, record_media
 from app.bot.handlers.registration.queue_profile import process_match_queue,\
@@ -169,6 +170,9 @@ async def filter_manage():
 async def edit_bio(message: Message, state: FSMContext,
                    user: User, ai_service: AIService):
     new_bio = message.text
+    if len(new_bio.strip()) < 40:
+        await message.answer(LEXICON.error.short_input)
+        return
     if new_bio:
         new_bio_vector = ai_service.get_embedding(new_bio)
         user.bio = new_bio
@@ -181,11 +185,15 @@ async def edit_bio(message: Message, state: FSMContext,
 async def edit_media(message: Message, state: FSMContext, user: User,
                      session: AsyncSession, album: List[Message] = None):
     profile_photo = None
+    exception = ""
     if message.text == LEXICON.button.set_profile_photo:
         profile_photo_response = await message.bot.get_user_profile_photos(
             user.telegram_id, limit=1
         )
-        profile_photo = profile_photo_response.photos[0]
+        if profile_photo_response.photos:
+            profile_photo = profile_photo_response.photos[0]
+        else:
+            exception = LEXICON.error.empty_profile_photo
     media = prepare_media(album, profile_photo or message.photo)
     if media:
         user_media_records = record_media(media, user.id)
@@ -194,6 +202,10 @@ async def edit_media(message: Message, state: FSMContext, user: User,
         await session.refresh(user)
 
         await show_self_profile(message, state, user)
+    else:
+        if not exception:
+            exception = LEXICON.error.empty_photo
+        await message.answer(exception, reply_markup=profile_buttons())
 
 
 # @router.message(StateFilter(Registration.edit_gender, Registration.edit_name,
