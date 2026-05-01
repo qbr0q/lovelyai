@@ -4,3 +4,4 @@ __pycache__/
 *.env
 *.yml
 .idea/
+model_cache/

@@ -1,14 +1,14 @@
 services:
-#  bot:
-#    build:
-#      context: .
-#      dockerfile: ./app/bot/Dockerfile
-#    container_name: luvly_bot
-#    env_file:
-#      - .env
-##    volumes:
-##      - ./app/bot:/app
-#    restart: always
+  bot:
+    build:
+      context: .
+      dockerfile: ./app/bot/Dockerfile
+    container_name: luvly_bot
+    restart: always
+    env_file:
+      - .env
+    volumes:
+      - ./model_cache:/root/.cache
   db:
     image: ankane/pgvector:latest
     container_name: luvly_db
