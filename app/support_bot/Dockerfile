@@ -19,14 +19,8 @@ RUN poetry config virtualenvs.create false
 RUN poetry config virtualenvs.create false \
     && poetry install --no-interaction --no-ansi --without ml --no-root
 
-# 2. СЛОЙ: Ставим CPU Torch отдельно (самый тяжелый этап)
-# Этот слой будет жить в кэше вечно, пока не обновится версия torch
-RUN pip install --no-cache-dir torch==2.10.0 --extra-index-url https://download.pytorch.org/whl/cpu
-
-# 3. СЛОЙ: Ставим ML-обвесы (transformers и т.д.) из группы ml (пока вручную через pip)
-# RUN poetry install --no-interaction --no-ansi --only ml --no-root --sync
-RUN pip install --no-cache-dir sentence-transformers
+WORKDIR /app
 
 COPY . .
 
-CMD ["python", "-m", "app.bot.main"]
+CMD ["python", "-m", "app.support_bot.main"]

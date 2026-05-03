@@ -15,7 +15,7 @@ class AIService:
         self.base_url = settings.ai.base_url
         self.base_model = settings.ai.default_model
         self.token_limit = settings.ai.daily_limit
-        self.api_key = config.openrouter_api_key
+        self.api_key = config.private.openrouter_api_key
         self.embedder = SentenceTransformer(settings.ai.embedder_model)
         self._client = None
 

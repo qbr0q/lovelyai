@@ -1,5 +1,5 @@
 import asyncio
-from app.launcher import start_app
+from app.support_bot.launcher import start_app
 
 
 if __name__ == "__main__":

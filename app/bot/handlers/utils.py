@@ -4,7 +4,7 @@ from aiogram.fsm.context import FSMContext
 from aiogram.enums import ParseMode
 
 from app.core import LEXICON
-from app.bot.states import Registration
+from app.bot.handlers.states import Registration
 from app.bot.handlers.kb import profile_buttons
 
 

@@ -9,6 +9,14 @@ services:
       - .env
     volumes:
       - ./model_cache:/root/.cache
+  support_bot:
+    build:
+      context: .
+      dockerfile: app/support_bot/Dockerfile
+    container_name: luvly_support_bot
+    restart: on-failure
+    env_file:
+      - .env
   db:
     image: ankane/pgvector:latest
     container_name: luvly_db

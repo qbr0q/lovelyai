@@ -3,7 +3,7 @@ from aiogram.fsm.context import FSMContext
 from sqlmodel.ext.asyncio.session import AsyncSession
 
 from app.core import LEXICON
-from app.bot.states import Registration
+from app.bot.handlers.states import Registration
 from app.bot.handlers.utils import show_match_profile
 from app.bot.handlers.kb import action_buttons
 from app.database.models import User

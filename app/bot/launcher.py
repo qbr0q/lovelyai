@@ -32,7 +32,7 @@ def get_proxy_session():
 
 async def setup_app():
     session = get_proxy_session()
-    bot = Bot(token=config.bot_token, session=session)
+    bot = Bot(token=config.private.bot_token, session=session)
     storage = MemoryStorage()
     dp = Dispatcher(storage=storage)
 
