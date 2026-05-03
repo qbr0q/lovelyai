@@ -34,8 +34,9 @@ async def send_profile_card(message, profile_data):
         await message.answer(profile_text)
 
 
-async def notify_target_user(bot, target_id, msg):
-    await bot.send_message(target_id, msg, parse_mode=ParseMode.HTML)
+async def notify_target_user(bot, target_id, msg, button_data=None):
+    await bot.send_message(target_id, msg,
+                           reply_markup=button_data, parse_mode=ParseMode.HTML)
 
 
 def get_profile_text(profile_data):
@@ -72,10 +73,6 @@ def get_profile_media(album, profile_text):
         )
     media_data[0].caption = profile_text
     return media_data
-
-
-def user_link(user):
-    return f'<a href="tg://user?id={user.telegram_id}">{LEXICON.message.match_account}</a>'
 
 
 async def is_subscribed(bot: Bot, user_id: int, channel_id: int):

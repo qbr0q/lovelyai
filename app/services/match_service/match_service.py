@@ -33,7 +33,7 @@ class MatchingService:
         ).where(
             User.id.not_in(excluded_ids_query)
         ).order_by(
-            distance_col.asc()
+            distance_col.desc()
         ).options(
             selectinload(User.media)
         )
@@ -86,7 +86,7 @@ class MatchingService:
             self.sharpness * (dist - self.midpoint)
         )) * 100
 
-    async def fetch_received_like(self, session, current_user: User):
+    async def fetch_received_like(self, current_user: User, session):
         distance_col = User.bio_vector.cosine_distance(
             current_user.bio_vector
         ).label("dist")
@@ -100,7 +100,7 @@ class MatchingService:
                 MatchAction.to_user_id == current_user.id,
                 MatchAction.is_match.is_(None)
             ).order_by(
-                distance_col.asc()
+                distance_col.desc()
             ).options(
                 selectinload(User.media)
             )

@@ -2,9 +2,9 @@ services:
   bot:
     build:
       context: .
-      dockerfile: ./app/bot/Dockerfile
+      dockerfile: app/bot/Dockerfile
     container_name: luvly_bot
-    restart: always
+    restart: on-failure
     env_file:
       - .env
     volumes:

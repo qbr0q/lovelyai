@@ -9,9 +9,9 @@ from sqlmodel.ext.asyncio.session import AsyncSession
 from app.core import settings, LEXICON
 from app.bot.states import Registration
 from app.bot.handlers.utils import show_self_profile, notify_target_user, \
-    user_link, is_subscribed
+    is_subscribed
 from app.bot.handlers.kb import account_buttons, channel_buttons, \
-    image_buttons, profile_buttons
+    image_buttons, profile_buttons, user_button
 from app.bot.handlers.registration.utils import extract_profile_data, \
     save_profile, prepare_media, record_media
 from app.bot.handlers.registration.queue_profile import process_match_queue,\
@@ -111,7 +111,7 @@ async def reaction_action(message: Message, state: FSMContext, user: User,
     is_like = message_text == LEXICON.button.like
     config = queue_config.get(current_state)
 
-    target_user = await state.get_value(config.key)
+    target_user: User = await state.get_value(config.key)
     if not target_user:
         return
 
@@ -134,11 +134,13 @@ async def reaction_action(message: Message, state: FSMContext, user: User,
                 notify_target_user(message.bot, target_user.telegram_id, config.msg)
             )
         else:
+            target_user_button = user_button(target_user.telegram_id)
+            current_user_button = user_button(user.telegram_id)
             await asyncio.gather(
                 notify_target_user(message.bot, target_user.telegram_id,
-                                   config.msg % user_link(user)),
+                                   config.msg, button_data=current_user_button),
                 notify_target_user(message.bot, user.telegram_id,
-                                   config.msg % user_link(target_user)),
+                                   config.msg, button_data=target_user_button),
                 return_exceptions=True
             )
 

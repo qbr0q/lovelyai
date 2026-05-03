@@ -76,6 +76,13 @@ def channel_buttons():
     return get_inline_keyboard(buttons_data, row_width=1)
 
 
+def user_button(user_id):
+    buttons_data = [
+        SimpleObject(title="Профиль пользователя", url=f"tg://user?id={user_id}")
+    ]
+    return get_inline_keyboard(buttons_data, row_width=1)
+
+
 def image_buttons():
     buttons_data = [
         SimpleObject(title=LEXICON.button.set_profile_photo),
