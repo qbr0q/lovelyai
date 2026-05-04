@@ -46,6 +46,7 @@ class User(SQLModel, table=True):
         sa_relationship_kwargs={"foreign_keys": "[MatchAction.to_user_id]", "back_populates": "to_user"}
     )
     ai_request: List["AIRequestLog"] = Relationship(back_populates="user")
+    ticket: List["Ticket"] = Relationship(back_populates="user")
 
     def clear(self):
         self.status = UserStatus.inactive
@@ -162,3 +163,27 @@ class AIRequestLog(SQLModel, table=True):
     )
 
     user: Optional["User"] = Relationship(back_populates="ai_request")
+
+
+class Ticket(SQLModel, table=True):
+    __tablename__ = "ticket"
+
+    id: int = Field(default=None, primary_key=True)
+    created_at: datetime = Field(default_factory=datetime.now)
+    updated_at: datetime = Field(
+        sa_column=Column(
+            DateTime(),
+            default=func.now(),
+            onupdate=func.now(),
+            server_default=func.now()
+        )
+    )
+    title: str
+    status: str
+    text: str
+    message_id: int
+    user_id: int = Field(
+        sa_column=Column(Integer, ForeignKey("user_profile.id", ondelete="CASCADE"), index=True)
+    )
+
+    user: Optional["User"] = Relationship(back_populates="ticket")

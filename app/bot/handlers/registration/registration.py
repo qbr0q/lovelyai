@@ -51,7 +51,7 @@ async def profile_menu(message: Message, state: FSMContext, user: User,
         await message.answer(LEXICON.message.recreate_profile)
         await state.set_state(Registration.waiting_self_profile)
     elif message_text == LEXICON.button.find_matches:
-        if not await is_subscribed(message.bot, user.telegram_id, settings.channel.id):
+        if not await is_subscribed(message.bot, user.telegram_id, settings.social.public_channel_id):
             await message.answer("Подпишись на канал, чтобы открыть доступ к анкетам. 🚀\n\n"
                                  "Это займет пару секунд.", reply_markup=channel_buttons())
             return

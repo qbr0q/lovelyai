@@ -70,7 +70,7 @@ def filter_buttons():
 
 def channel_buttons():
     buttons_data = [
-        SimpleObject(title="Подписаться на канал", url=settings.channel.url),
+        SimpleObject(title="Подписаться на канал", url=settings.social.public_channel_url),
         SimpleObject(title="Я подписался", style="success", callback="is_subscribed")
     ]
     return get_inline_keyboard(buttons_data, row_width=1)

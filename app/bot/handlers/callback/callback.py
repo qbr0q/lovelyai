@@ -17,7 +17,7 @@ router = Router()
 @router.callback_query(F.data == "is_subscribed")
 async def edit_profile(callback: CallbackQuery, state: FSMContext, user: User,
                        session: AsyncSession, match_service: MatchingService):
-    if not await is_subscribed(callback.bot, user.telegram_id, settings.channel.id):
+    if not await is_subscribed(callback.bot, user.telegram_id, settings.social.public_channel_id):
         await callback.answer("Вы все еще не подписаны")
         return
     user.status = UserStatus.active
