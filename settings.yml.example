@@ -6,7 +6,8 @@ ai:
 gar:
   base_url: gar-url
   user_agent: USER_AGENT
-channel:
-  id: CHANNEL_ID
-  url: CHANNEL_URL
+social:
+  public_channel_id: CHANNEL_ID
+  public_channel_url: CHANNEL_URL
+  staff_channel_id: CHANNEL_ID
 use_proxy: false
