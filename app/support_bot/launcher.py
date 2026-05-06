@@ -18,7 +18,7 @@ def include_routers(dp):
 def include_middleware(dp):
     dp.update.middleware(DbSessionMiddleware(session_pool=SessionLocal))
     dp.update.middleware(UserRegistrationMiddleware())
-    dp.message.middleware(AlbumMiddleware())
+    # dp.message.middleware(AlbumMiddleware())
     dp.errors.outer_middleware(ErrorLoggingMiddleware())
 
 
@@ -36,7 +36,7 @@ async def setup_app():
     dp = Dispatcher(storage=storage)
 
     include_routers(dp)
-    # include_middleware(dp)
+    include_middleware(dp)
 
     return so(
         bot=bot,

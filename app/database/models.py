@@ -179,7 +179,7 @@ class Ticket(SQLModel, table=True):
         )
     )
     title: str
-    status: str
+    status: str = Field(index=True)
     text: str
     message_id: int
     user_id: int = Field(

@@ -7,9 +7,9 @@ from aiogram.fsm.context import FSMContext
 from sqlmodel.ext.asyncio.session import AsyncSession
 
 from app.core import settings, LEXICON
+from app.common.utils import notify_target_user
 from app.bot.handlers.states import Registration
-from app.bot.handlers.utils import show_self_profile, notify_target_user, \
-    is_subscribed
+from app.bot.handlers.utils import show_self_profile, is_subscribed
 from app.bot.handlers.kb import account_buttons, channel_buttons, \
     image_buttons, profile_buttons, user_button
 from app.bot.handlers.registration.utils import extract_profile_data, \

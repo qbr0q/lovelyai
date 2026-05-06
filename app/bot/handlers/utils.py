@@ -1,7 +1,6 @@
 from aiogram import Bot
 from aiogram.types import Message, InputMediaPhoto
 from aiogram.fsm.context import FSMContext
-from aiogram.enums import ParseMode
 
 from app.core import LEXICON
 from app.bot.handlers.states import Registration
@@ -32,11 +31,6 @@ async def send_profile_card(message, profile_data):
         await message.answer_photo(photo=media_data.file_id, caption=profile_text)
     else:
         await message.answer(profile_text)
-
-
-async def notify_target_user(bot, target_id, msg, button_data=None):
-    await bot.send_message(target_id, msg,
-                           reply_markup=button_data, parse_mode=ParseMode.HTML)
 
 
 def get_profile_text(profile_data):

@@ -30,3 +30,8 @@ class MediaType(StrEnum):
 class UserRole(StrEnum):
     user = "user"
     admin = "admin"
+
+
+class TicketStatus(StrEnum):
+    open = "open"
+    closed = "closed"
