@@ -30,5 +30,5 @@ async def waiting_ticket(message: Message,
 
     await message.bot.send_message(chat_id=settings.social.staff_channel_id,
                                    text=f"📩 НОВЫЙ ТИКЕТ [#{record.id}]\n\n{message.text}")
-    await message.answer(f"Получили твой запрос и уже разбираемся✨\n"
+    await message.answer(f"Получили твой запрос и уже разбираемся ✨\n"
                          f"Номер обращения: {record.id}")

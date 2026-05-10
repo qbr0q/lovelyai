@@ -8,7 +8,7 @@ from app.database.models import User
 
 
 @broker.task(schedule=[{"interval": "10"}])
-async def my_periodic_task(
+async def test(
     session: AsyncSession = TaskiqDepends(get_session_dependency)
 ):
     statement = (
@@ -16,4 +16,8 @@ async def my_periodic_task(
         .where(User.id == 1)
     )
     result = await session.execute(statement)
-    print(result)
+    print(result.one())
+
+# @broker.task(schedule=[{"interval": "10"}])
+# async def test():
+#     print("test")

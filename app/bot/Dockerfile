@@ -17,7 +17,7 @@ RUN poetry config virtualenvs.create false
 
 # 1. СЛОЙ: Ставим только легкую базу (быстро)
 RUN poetry config virtualenvs.create false \
-    && poetry install --no-interaction --no-ansi --without ml --no-root
+    && poetry install --no-interaction --no-ansi --only main,bots,ml --no-root
 
 # 2. СЛОЙ: Ставим CPU Torch отдельно (самый тяжелый этап)
 # Этот слой будет жить в кэше вечно, пока не обновится версия torch
