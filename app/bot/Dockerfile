@@ -1,32 +1,40 @@
-FROM python:3.12-slim
-
-# Системный обвес
-RUN apt-get update && apt-get install -y --no-install-recommends --fix-missing \
-    build-essential \
-    libpq-dev \
-    && rm -rf /var/lib/apt/lists/*
-
-RUN pip install poetry
-
+# ===== ЭТАП 1: Builder (тяжёлый, для компиляции) =====
+FROM python:3.12-slim AS builder
 WORKDIR /app
 
+# Системные зависимости ТОЛЬКО для сборки
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    build-essential libpq-dev \
+    && rm -rf /var/lib/apt/lists/*
+
+# Копируем манифесты зависимостей
 COPY pyproject.toml poetry.lock* ./
 
-# Ставим пакеты прямо в систему контейнера
-RUN poetry config virtualenvs.create false
+# Ставим Poetry и зависимости (включая ml-группу)
+RUN pip install --no-cache-dir poetry \
+    && poetry config virtualenvs.create false \
+    && poetry install --no-interaction --no-ansi --only main,bots,ml --no-root \
+    # Torch CPU версия (проверь актуальную версию!)
+    && pip install --no-cache-dir torch==2.10.0 --extra-index-url https://download.pytorch.org/whl/cpu \
+    # Чистим кэш и удаляем Poetry
+    && rm -rf /root/.cache/pypoetry \
+    && pip uninstall -y poetry
 
-# 1. СЛОЙ: Ставим только легкую базу (быстро)
-RUN poetry config virtualenvs.create false \
-    && poetry install --no-interaction --no-ansi --only main,bots,ml --no-root
+# ===== ЭТАП 2: Runtime (чистый, для прода) =====
+FROM python:3.12-slim
+WORKDIR /app
 
-# 2. СЛОЙ: Ставим CPU Torch отдельно (самый тяжелый этап)
-# Этот слой будет жить в кэше вечно, пока не обновится версия torch
-RUN pip install --no-cache-dir torch==2.10.0 --extra-index-url https://download.pytorch.org/whl/cpu
+# Системные рантайм-зависимости (только то, что нужно для работы)
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    libpq5 \
+    && rm -rf /var/lib/apt/lists/*
 
-# 3. СЛОЙ: Ставим ML-обвесы (transformers и т.д.) из группы ml (пока вручную через pip)
-# RUN poetry install --no-interaction --no-ansi --only ml --no-root --sync
-RUN pip install --no-cache-dir sentence-transformers
+# Копируем только установленные пакеты из builder
+COPY --from=builder /usr/local/lib/python3.12/site-packages /usr/local/lib/python3.12/site-packages
+COPY --from=builder /usr/local/bin /usr/local/bin
 
+# Копируем код проекта (в конце для кэширования слоёв)
 COPY . .
 
+ENV PYTHONPATH=/app PYTHONUNBUFFERED=1
 CMD ["python", "-m", "app.bot.main"]
