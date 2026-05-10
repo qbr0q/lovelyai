@@ -33,6 +33,39 @@ services:
       - TZ=Europe/Moscow
     volumes:
       - luvly_data:/var/lib/postgresql/data
+  redis:
+    image: redis:7-alpine
+    container_name: luvly_redis
+    restart: always
+    ports:
+      - "6380:6379"
+  # Воркер Taskiq
+  worker:
+    build:
+        context: .
+        dockerfile: app/task_schedule/Dockerfile
+    environment:
+      - TZ=Europe/Moscow
+      - PYTHONUNBUFFERED=1
+    container_name: taskiq_worker
+    command: taskiq worker app.task_schedule.main:broker
+    depends_on:
+      - redis
+      - db
+    env_file: .env
+  # Планировщик Taskiq
+  scheduler:
+    build:
+        context: .
+        dockerfile: app/task_schedule/Dockerfile
+    environment:
+      - TZ=Europe/Moscow
+      - PYTHONUNBUFFERED=1
+    container_name: taskiq_scheduler
+    command: taskiq scheduler app.task_schedule.main:scheduler
+    depends_on:
+      - redis
+    env_file: .env
 
 volumes:
   luvly_data:

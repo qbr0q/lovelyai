@@ -17,7 +17,7 @@ RUN poetry config virtualenvs.create false
 
 # 1. СЛОЙ: Ставим только легкую базу (быстро)
 RUN poetry config virtualenvs.create false \
-    && poetry install --no-interaction --no-ansi --without ml --no-root
+    && poetry install --no-interaction --no-ansi --only main,bots --no-root
 
 WORKDIR /app
 

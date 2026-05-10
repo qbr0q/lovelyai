@@ -1,5 +1,5 @@
 from aiogram import Bot, Dispatcher
-from aiogram.fsm.storage.memory import MemoryStorage
+from aiogram.fsm.storage.redis import RedisStorage
 from aiogram.client.session.aiohttp import AiohttpSession
 
 from app.core import config, settings
@@ -32,7 +32,7 @@ def get_proxy_session():
 async def setup_app():
     session = get_proxy_session()
     bot = Bot(token=config.private.support_bot_token, session=session)
-    storage = MemoryStorage()
+    storage = RedisStorage.from_url(config.redis.url)
     dp = Dispatcher(storage=storage)
 
     include_routers(dp)

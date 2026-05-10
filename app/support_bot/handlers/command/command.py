@@ -2,9 +2,8 @@ from aiogram import Router
 from aiogram.filters import Command, CommandStart
 from aiogram.types import Message
 from aiogram.fsm.context import FSMContext
-from sqlmodel.ext.asyncio.session import AsyncSession
 
-from app.database.models import User, Ticket
+from app.database.models import User
 from app.support_bot.handlers.states import Registration
 
 router = Router()
