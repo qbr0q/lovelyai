@@ -5,7 +5,7 @@ from sqlmodel.ext.asyncio.session import AsyncSession
 
 from app.database.models import User, MatchAction
 from app.database.enums import UserStatus
-from .utils import MatchProfile
+from .shemas import MatchProfile
 
 
 class MatchingService:
@@ -79,7 +79,7 @@ class MatchingService:
             media=user.media,
             match_percent=f"{self._match_percent(dist):.0f}%"
         )
-        return match_profile
+        return match_profile.model_dump()
 
     def _match_percent(self, dist):
         return 1 / (1 + math.exp(

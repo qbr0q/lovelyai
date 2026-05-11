@@ -9,6 +9,7 @@ from app.bot.handlers.kb import action_buttons
 from app.database.models import User
 from app.database.enums import QueueName, ActionType
 from app.services import MatchingService
+from app.services.match_service.shemas import MatchProfile
 from app.core.utils import SimpleObject as so
 
 
@@ -28,14 +29,14 @@ async def generic_queue_manager(user, session, message: Message,
         await message.answer(error_text)
         return
 
-    profile_data = queue.pop(0)
+    profile_data_data = queue.pop(0)
 
     await state.update_data({
         key: queue,
-        current_key: profile_data
+        current_key: profile_data_data
     })
 
-    return profile_data
+    return MatchProfile(**profile_data_data)
 
 
 async def process_match_queue(message: Message, state: FSMContext, user: User,

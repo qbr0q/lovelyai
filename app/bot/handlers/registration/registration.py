@@ -20,6 +20,7 @@ from app.database.models import User, MatchAction
 from app.database.enums import UserStatus, QueueName
 from app.services import AIService, GARService, MatchingService
 from app.services.ai_service.utils import LimitToken
+from app.services.match_service.shemas import MatchProfile
 
 
 router = Router()
@@ -111,7 +112,8 @@ async def reaction_action(message: Message, state: FSMContext, user: User,
     is_like = message_text == LEXICON.button.like
     config = queue_config.get(current_state)
 
-    target_user: User = await state.get_value(config.key)
+    target_user_data = await state.get_value(config.key)
+    target_user = MatchProfile(**target_user_data)
     if not target_user:
         return
 
