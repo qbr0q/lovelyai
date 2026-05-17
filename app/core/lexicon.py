@@ -1,4 +1,4 @@
-from app.core.utils import SimpleObject as so
+from app.common.utils import SimpleObject as so
 
 
 LEXICON = so(

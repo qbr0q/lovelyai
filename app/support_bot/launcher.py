@@ -1,12 +1,11 @@
 from aiogram import Bot, Dispatcher
 from aiogram.fsm.storage.redis import RedisStorage
-from aiogram.client.session.aiohttp import AiohttpSession
 
-from app.core import config, settings
+from app.core import config
 from app.support_bot.handlers import routers
 from app.core.middlewares import DbSessionMiddleware, UserRegistrationMiddleware, \
-    AlbumMiddleware, ErrorLoggingMiddleware
-from app.core.utils import SimpleObject as so
+    ErrorLoggingMiddleware
+from app.common.utils import SimpleObject as so, get_proxy_session
 from app.database import SessionLocal
 
 
@@ -20,13 +19,6 @@ def include_middleware(dp):
     dp.update.middleware(UserRegistrationMiddleware())
     # dp.message.middleware(AlbumMiddleware())
     dp.errors.outer_middleware(ErrorLoggingMiddleware())
-
-
-def get_proxy_session():
-    session = None
-    if settings.use_proxy:
-        session = AiohttpSession(proxy=config.proxy.url)
-    return session
 
 
 async def setup_app():

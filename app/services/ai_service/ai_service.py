@@ -4,7 +4,7 @@ from openai import AsyncOpenAI
 from sentence_transformers import SentenceTransformer
 
 from app.core import settings, config
-from app.core.utils import SimpleObject as so
+from app.common.utils import SimpleObject as so
 from app.database.enums import AiRequestType
 from .prompts import system_prompts, user_prompts
 from .utils import LimitToken, log_request, has_limit

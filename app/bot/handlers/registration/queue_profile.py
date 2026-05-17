@@ -10,7 +10,7 @@ from app.database.models import User
 from app.database.enums import QueueName, ActionType
 from app.services import MatchingService
 from app.services.match_service.shemas import MatchProfile
-from app.core.utils import SimpleObject as so
+from app.common.utils import SimpleObject as so
 
 
 async def generic_queue_manager(user, session, message: Message,

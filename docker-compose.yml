@@ -25,9 +25,9 @@ services:
     env_file:
       - .env
     environment:
-      - POSTGRES_USER=${DB_USER}
-      - POSTGRES_PASSWORD=${DB_PASSWORD}
-      - POSTGRES_DB=${DB_DB}
+      - POSTGRES_USER=${DB__USER}
+      - POSTGRES_PASSWORD=${DB__PASSWORD}
+      - POSTGRES_DB=${DB__DB}
       - TZ=Europe/Moscow
     volumes:
       - luvly_data:/var/lib/postgresql/data
@@ -63,6 +63,7 @@ services:
     command: taskiq scheduler app.task_schedule.main:scheduler
     depends_on:
       - redis
+      - db
     env_file: .env
 
 volumes:

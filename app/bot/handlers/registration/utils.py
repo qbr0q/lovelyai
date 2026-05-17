@@ -3,7 +3,7 @@ from sqlmodel.ext.asyncio.session import AsyncSession
 
 from app.database.models import UserMedia
 from app.database.enums import AiRequestType
-from app.core.utils import Profile
+from app.common.utils import Profile
 
 
 async def extract_profile_data(ai_service, raw_text, user_id):

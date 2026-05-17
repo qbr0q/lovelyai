@@ -2,7 +2,7 @@ from aiogram.types import InlineKeyboardButton, KeyboardButton
 from aiogram.utils.keyboard import ReplyKeyboardBuilder, InlineKeyboardBuilder
 
 from app.core import settings, LEXICON
-from app.core.utils import SimpleObject
+from app.common.utils import SimpleObject
 
 
 def get_reply_keyboard(buttons_data, row_width=2):

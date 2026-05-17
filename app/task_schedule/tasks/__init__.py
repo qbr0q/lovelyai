@@ -1,1 +1,1 @@
-from .ping import test
+from .notification import test
