@@ -155,8 +155,6 @@ async def manage_account(message: Message, state: FSMContext, session: AsyncSess
     message_text = message.text
     if message_text == LEXICON.button.profile:
         await show_self_profile(message, state, user)
-    elif message_text == LEXICON.button.profile:
-        pass
     elif message_text == LEXICON.button.likes:
         await message.answer(LEXICON.process.search_like)
         await process_like_queue(message, state, user, session, match_service)
